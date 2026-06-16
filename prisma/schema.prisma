@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String?
+  createdAt DateTime @default(now())
+
+  documents    Document[]
+  chatSessions ChatSession[]
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  fileUrl   String
+  fileType  String   @default("pdf")
+  pageCount Int?
+  createdAt DateTime @default(now())
+
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nodes KnowledgeNode[]
+}
+
+model KnowledgeNode {
+  id         String   @id @default(cuid())
+  userId     String
+  documentId String
+  title      String
+  summary    String
+  content    String   @db.Text
+  pageNumber Int?
+  createdAt  DateTime @default(now())
+
+  document  Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  edgesFrom KnowledgeEdge[] @relation("EdgeFrom")
+  edgesTo   KnowledgeEdge[] @relation("EdgeTo")
+}
+
+model KnowledgeEdge {
+  id           String   @id @default(cuid())
+  fromNodeId   String
+  toNodeId     String
+  relationType String   @default("related")
+  strength     Float    @default(0.5)
+  createdAt    DateTime @default(now())
+
+  fromNode KnowledgeNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode   KnowledgeNode @relation("EdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  @@unique([fromNodeId, toNodeId])
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String   @default("New Chat")
+  createdAt DateTime @default(now())
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id                String   @id @default(cuid())
+  sessionId         String
+  role              String
+  content           String   @db.Text
+  referencedNodeIds String[]
+  createdAt         DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
