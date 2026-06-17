@@ -60,6 +60,8 @@ Keep all code inside `src/`. Do not create `src/frontend/` or `src/backend/` sub
 - `DATABASE_URL` uses the transaction pooler (port 6543, `?pgbouncer=true`) for runtime.
 - `DIRECT_URL` uses the session pooler (port 5432) for migrations/push — both must be in `.env.local`.
 - Never use `prisma migrate dev` — use `prisma db push` only (Supabase pooler is incompatible with migrate).
+- **Prisma v7 requires a driver adapter** — `new PrismaClient()` with no arguments throws at runtime. Always pass `PrismaPg` from `@prisma/adapter-pg`. See `src/lib/db.ts` for the pattern.
+- In seed scripts (`prisma/seed.ts`), use `DIRECT_URL` for the adapter — pgBouncer transaction pooler does not support the session-level operations seeding requires.
 
 ---
 

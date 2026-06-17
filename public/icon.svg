@@ -1,134 +1,146 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#1a0a2e"/>
-      <stop offset="100%" stop-color="#0d0516"/>
+    <radialGradient id="bg" cx="50%" cy="45%" r="65%">
+      <stop offset="0%"   stop-color="#1c1f3a"/>
+      <stop offset="100%" stop-color="#0d0f1f"/>
     </radialGradient>
-    <radialGradient id="nodeCore" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="40%" stop-color="#a78bfa"/>
-      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    <radialGradient id="bodyGlow" cx="50%" cy="60%" r="55%">
+      <stop offset="0%"   stop-color="#1e2450" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0d0f1f" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="nodeCyan" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="40%" stop-color="#67e8f9"/>
-      <stop offset="100%" stop-color="#0891b2" stop-opacity="0"/>
+    <radialGradient id="goldCore" cx="50%" cy="40%" r="60%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="20%"  stop-color="#fef9c3"/>
+      <stop offset="55%"  stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="nodeGold" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="40%" stop-color="#fde68a"/>
-      <stop offset="100%" stop-color="#d97706" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="1.5" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="glowSm" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="1" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <filter id="glowStrong" x="-100%" y="-100%" width="300%" height="300%">
-      <feGaussianBlur stdDeviation="2.5" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="glowMd" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowLg" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <!-- Background circle -->
-  <circle cx="60" cy="60" r="58" fill="url(#bgGrad)" stroke="#7c3aed" stroke-width="1.5" stroke-opacity="0.6"/>
+  <!-- Rounded square background (app icon style) -->
+  <rect x="0" y="0" width="120" height="120" rx="24" ry="24" fill="url(#bg)"/>
 
-  <!-- Brain silhouette (subtle organic outline) -->
-  <path d="M38 72 C28 68 22 58 24 48 C25 40 30 34 36 32 C38 26 44 22 50 24 C53 20 58 18 62 20 C66 17 73 18 76 23 C82 22 88 27 89 34 C95 36 99 44 97 52 C100 58 98 68 90 73 C88 80 82 84 76 83 C73 88 67 90 62 88 C57 91 50 90 46 85 C41 86 35 82 38 72 Z"
-        fill="none" stroke="#4c1d95" stroke-width="1" stroke-opacity="0.5"/>
+  <!-- Ripple rings (aura / 灵气波动) -->
+  <circle cx="60" cy="72" r="50" fill="none" stroke="#2a2f58" stroke-width="0.8" opacity="0.7"/>
+  <circle cx="60" cy="72" r="41" fill="none" stroke="#303566" stroke-width="0.9" opacity="0.7"/>
+  <circle cx="60" cy="72" r="32" fill="none" stroke="#383d74" stroke-width="1"   opacity="0.75"/>
 
-  <!-- Brain fold lines (decorative) -->
-  <path d="M46 35 C50 32 55 33 58 37" fill="none" stroke="#6d28d9" stroke-width="0.8" stroke-opacity="0.4" stroke-linecap="round"/>
-  <path d="M62 30 C67 28 72 31 73 36" fill="none" stroke="#6d28d9" stroke-width="0.8" stroke-opacity="0.4" stroke-linecap="round"/>
-  <path d="M36 55 C33 50 35 44 39 42" fill="none" stroke="#6d28d9" stroke-width="0.8" stroke-opacity="0.4" stroke-linecap="round"/>
+  <!-- Dark oval glow behind the figure body -->
+  <ellipse cx="60" cy="74" rx="36" ry="30" fill="url(#bodyGlow)"/>
 
-  <!-- Skill tree edges (drawn first, behind nodes) -->
-  <!-- Root to tier 1 -->
-  <line x1="60" y1="55" x2="42" y2="42" stroke="#7c3aed" stroke-width="1.2" stroke-opacity="0.7" filter="url(#glow)"/>
-  <line x1="60" y1="55" x2="60" y2="38" stroke="#7c3aed" stroke-width="1.2" stroke-opacity="0.7" filter="url(#glow)"/>
-  <line x1="60" y1="55" x2="78" y2="42" stroke="#7c3aed" stroke-width="1.2" stroke-opacity="0.7" filter="url(#glow)"/>
+  <!-- ===== BODY EDGES (lines behind nodes) ===== -->
+  <!-- Edge color: soft blue #60a5fa, thin -->
 
-  <!-- Tier 1 to tier 2 -->
-  <line x1="42" y1="42" x2="33" y2="58" stroke="#0891b2" stroke-width="1" stroke-opacity="0.6"/>
-  <line x1="42" y1="42" x2="50" y2="62" stroke="#0891b2" stroke-width="1" stroke-opacity="0.6"/>
-  <line x1="60" y1="38" x2="60" y2="60" stroke="#0891b2" stroke-width="1" stroke-opacity="0.6"/>
-  <line x1="78" y1="42" x2="70" y2="62" stroke="#0891b2" stroke-width="1" stroke-opacity="0.6"/>
-  <line x1="78" y1="42" x2="86" y2="57" stroke="#0891b2" stroke-width="1" stroke-opacity="0.6"/>
+  <!-- Neck: head-ring bottom nodes → top chest node -->
+  <line x1="55" y1="41" x2="57" y2="48" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.75"/>
+  <line x1="65" y1="41" x2="63" y2="48" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.75"/>
 
-  <!-- Tier 2 to tier 3 -->
-  <line x1="33" y1="58" x2="30" y2="72" stroke="#6d28d9" stroke-width="0.9" stroke-opacity="0.5"/>
-  <line x1="50" y1="62" x2="45" y2="75" stroke="#6d28d9" stroke-width="0.9" stroke-opacity="0.5"/>
-  <line x1="60" y1="60" x2="60" y2="75" stroke="#6d28d9" stroke-width="0.9" stroke-opacity="0.5"/>
-  <line x1="70" y1="62" x2="74" y2="75" stroke="#6d28d9" stroke-width="0.9" stroke-opacity="0.5"/>
-  <line x1="86" y1="57" x2="89" y2="71" stroke="#6d28d9" stroke-width="0.9" stroke-opacity="0.5"/>
+  <!-- Top chest → left shoulder, right shoulder -->
+  <line x1="60" y1="48" x2="47" y2="55" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.8"/>
+  <line x1="60" y1="48" x2="73" y2="55" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.8"/>
 
-  <!-- Cross-links (like brain connections) -->
-  <line x1="50" y1="62" x2="60" y2="60" stroke="#a78bfa" stroke-width="0.7" stroke-opacity="0.4" stroke-dasharray="2,2"/>
-  <line x1="60" y1="60" x2="70" y2="62" stroke="#a78bfa" stroke-width="0.7" stroke-opacity="0.4" stroke-dasharray="2,2"/>
-  <line x1="33" y1="58" x2="42" y2="42" stroke="#a78bfa" stroke-width="0.6" stroke-opacity="0.3" stroke-dasharray="2,3"/>
+  <!-- Shoulders → inner chest nodes -->
+  <line x1="47" y1="55" x2="55" y2="57" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.8"/>
+  <line x1="73" y1="55" x2="65" y2="57" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.8"/>
 
-  <!-- ROOT node (gold / center) -->
-  <circle cx="60" cy="55" r="7" fill="#1a0a2e"/>
-  <circle cx="60" cy="55" r="7" fill="url(#nodeGold)" filter="url(#glowStrong)"/>
-  <circle cx="60" cy="55" r="3" fill="#fde68a" filter="url(#glowStrong)"/>
+  <!-- Shoulders ↔ inner (cross braces) -->
+  <line x1="47" y1="55" x2="65" y2="57" stroke="#60a5fa" stroke-width="0.8" stroke-opacity="0.55"/>
+  <line x1="73" y1="55" x2="55" y2="57" stroke="#60a5fa" stroke-width="0.8" stroke-opacity="0.55"/>
 
-  <!-- Tier 1 nodes (purple) -->
-  <circle cx="42" cy="42" r="5" fill="#1a0a2e"/>
-  <circle cx="42" cy="42" r="5" fill="url(#nodeCore)" filter="url(#glow)"/>
-  <circle cx="42" cy="42" r="2" fill="#c4b5fd"/>
+  <!-- Shoulders → outer arms / outer mid -->
+  <line x1="47" y1="55" x2="38" y2="65" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.75"/>
+  <line x1="73" y1="55" x2="82" y2="65" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.75"/>
 
-  <circle cx="60" cy="38" r="5" fill="#1a0a2e"/>
-  <circle cx="60" cy="38" r="5" fill="url(#nodeCore)" filter="url(#glow)"/>
-  <circle cx="60" cy="38" r="2" fill="#c4b5fd"/>
+  <!-- Inner chest → golden orb -->
+  <line x1="55" y1="57" x2="60" y2="67" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.8"/>
+  <line x1="65" y1="57" x2="60" y2="67" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.8"/>
 
-  <circle cx="78" cy="42" r="5" fill="#1a0a2e"/>
-  <circle cx="78" cy="42" r="5" fill="url(#nodeCore)" filter="url(#glow)"/>
-  <circle cx="78" cy="42" r="2" fill="#c4b5fd"/>
+  <!-- Shoulders → golden orb (outer diagonals) -->
+  <line x1="47" y1="55" x2="60" y2="67" stroke="#60a5fa" stroke-width="0.8" stroke-opacity="0.65"/>
+  <line x1="73" y1="55" x2="60" y2="67" stroke="#60a5fa" stroke-width="0.8" stroke-opacity="0.65"/>
 
-  <!-- Tier 2 nodes (cyan) -->
-  <circle cx="33" cy="58" r="4" fill="#1a0a2e"/>
-  <circle cx="33" cy="58" r="4" fill="url(#nodeCyan)" filter="url(#glow)"/>
-  <circle cx="33" cy="58" r="1.5" fill="#a5f3fc"/>
+  <!-- Outer arms → lower outer nodes -->
+  <line x1="38" y1="65" x2="44" y2="78" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.75"/>
+  <line x1="82" y1="65" x2="76" y2="78" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.75"/>
 
-  <circle cx="50" cy="62" r="4" fill="#1a0a2e"/>
-  <circle cx="50" cy="62" r="4" fill="url(#nodeCyan)" filter="url(#glow)"/>
-  <circle cx="50" cy="62" r="1.5" fill="#a5f3fc"/>
+  <!-- Golden orb → lower nodes -->
+  <line x1="60" y1="67" x2="44" y2="78" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.75"/>
+  <line x1="60" y1="67" x2="76" y2="78" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.75"/>
+  <line x1="60" y1="67" x2="60" y2="82" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.75"/>
 
-  <circle cx="60" cy="60" r="4" fill="#1a0a2e"/>
-  <circle cx="60" cy="60" r="4" fill="url(#nodeCyan)" filter="url(#glow)"/>
-  <circle cx="60" cy="60" r="1.5" fill="#a5f3fc"/>
+  <!-- Lower cross edges -->
+  <line x1="44" y1="78" x2="60" y2="82" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.7"/>
+  <line x1="76" y1="78" x2="60" y2="82" stroke="#60a5fa" stroke-width="0.9" stroke-opacity="0.7"/>
+  <line x1="44" y1="78" x2="76" y2="78" stroke="#60a5fa" stroke-width="0.8" stroke-opacity="0.55"/>
 
-  <circle cx="70" cy="62" r="4" fill="#1a0a2e"/>
-  <circle cx="70" cy="62" r="4" fill="url(#nodeCyan)" filter="url(#glow)"/>
-  <circle cx="70" cy="62" r="1.5" fill="#a5f3fc"/>
+  <!-- Outer lower → outermost lotus nodes -->
+  <line x1="44" y1="78" x2="36" y2="82" stroke="#60a5fa" stroke-width="0.8" stroke-opacity="0.65"/>
+  <line x1="76" y1="78" x2="84" y2="82" stroke="#60a5fa" stroke-width="0.8" stroke-opacity="0.65"/>
+  <line x1="36" y1="82" x2="60" y2="82" stroke="#60a5fa" stroke-width="0.8" stroke-opacity="0.55"/>
+  <line x1="84" y1="82" x2="60" y2="82" stroke="#60a5fa" stroke-width="0.8" stroke-opacity="0.55"/>
 
-  <circle cx="86" cy="57" r="4" fill="#1a0a2e"/>
-  <circle cx="86" cy="57" r="4" fill="url(#nodeCyan)" filter="url(#glow)"/>
-  <circle cx="86" cy="57" r="1.5" fill="#a5f3fc"/>
+  <!-- ===== HEAD RING ===== -->
+  <!-- 8-node polygon centered at (60, 28), r=12 -->
+  <!-- angles: 90°top, then every 45° -->
+  <!-- nodes: top(60,16), top-right(68.5,19.5), right(72,28), bottom-right(68.5,36.5), bottom(60,40), bottom-left(51.5,36.5), left(48,28), top-left(51.5,19.5) -->
+  <polygon
+    points="60,16 68.5,19.5 72,28 68.5,36.5 60,40 51.5,36.5 48,28 51.5,19.5"
+    fill="none" stroke="#60a5fa" stroke-width="1" stroke-opacity="0.75"
+    filter="url(#glowSm)"/>
 
-  <!-- Tier 3 nodes (smaller, dim purple) -->
-  <circle cx="30" cy="72" r="3" fill="#1a0a2e"/>
-  <circle cx="30" cy="72" r="3" fill="url(#nodeCore)" filter="url(#glow)" opacity="0.8"/>
-  <circle cx="30" cy="72" r="1.2" fill="#ddd6fe"/>
+  <!-- HEAD ring nodes (8 dots) -->
+  <circle cx="60"   cy="16"   r="2.3" fill="#bfdbfe" filter="url(#glowSm)"/>
+  <circle cx="68.5" cy="19.5" r="2.3" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="72"   cy="28"   r="2.3" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="68.5" cy="36.5" r="2.3" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="60"   cy="40"   r="2.3" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="51.5" cy="36.5" r="2.3" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="48"   cy="28"   r="2.3" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="51.5" cy="19.5" r="2.3" fill="#93c5fd" filter="url(#glowSm)"/>
 
-  <circle cx="45" cy="75" r="3" fill="#1a0a2e"/>
-  <circle cx="45" cy="75" r="3" fill="url(#nodeCore)" filter="url(#glow)" opacity="0.8"/>
-  <circle cx="45" cy="75" r="1.2" fill="#ddd6fe"/>
+  <!-- ===== BODY NODES ===== -->
+  <!-- Top chest (below neck) -->
+  <circle cx="60" cy="48" r="2.5" fill="#93c5fd" filter="url(#glowSm)"/>
 
-  <circle cx="60" cy="75" r="3" fill="#1a0a2e"/>
-  <circle cx="60" cy="75" r="3" fill="url(#nodeCore)" filter="url(#glow)" opacity="0.8"/>
-  <circle cx="60" cy="75" r="1.2" fill="#ddd6fe"/>
+  <!-- Shoulders -->
+  <circle cx="47" cy="55" r="2.5" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="73" cy="55" r="2.5" fill="#93c5fd" filter="url(#glowSm)"/>
 
-  <circle cx="74" cy="75" r="3" fill="#1a0a2e"/>
-  <circle cx="74" cy="75" r="3" fill="url(#nodeCore)" filter="url(#glow)" opacity="0.8"/>
-  <circle cx="74" cy="75" r="1.2" fill="#ddd6fe"/>
+  <!-- Inner chest -->
+  <circle cx="55" cy="57" r="2.3" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="65" cy="57" r="2.3" fill="#93c5fd" filter="url(#glowSm)"/>
 
-  <circle cx="89" cy="71" r="3" fill="#1a0a2e"/>
-  <circle cx="89" cy="71" r="3" fill="url(#nodeCore)" filter="url(#glow)" opacity="0.8"/>
-  <circle cx="89" cy="71" r="1.2" fill="#ddd6fe"/>
+  <!-- Outer arms / mid -->
+  <circle cx="38" cy="65" r="2.5" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="82" cy="65" r="2.5" fill="#93c5fd" filter="url(#glowSm)"/>
+
+  <!-- Lower nodes -->
+  <circle cx="44" cy="78" r="2.5" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="76" cy="78" r="2.5" fill="#93c5fd" filter="url(#glowSm)"/>
+  <circle cx="60" cy="82" r="2.5" fill="#93c5fd" filter="url(#glowSm)"/>
+
+  <!-- Outermost lotus base nodes -->
+  <circle cx="36" cy="82" r="2.2" fill="#7dd3fc" filter="url(#glowSm)"/>
+  <circle cx="84" cy="82" r="2.2" fill="#7dd3fc" filter="url(#glowSm)"/>
+
+  <!-- ===== GOLDEN ORB (丹田 / golden core) ===== -->
+  <!-- Outer ambient glow -->
+  <circle cx="60" cy="67" r="16" fill="#f59e0b" opacity="0.08" filter="url(#glowLg)"/>
+  <circle cx="60" cy="67" r="11" fill="#f59e0b" opacity="0.18" filter="url(#glowLg)"/>
+  <!-- Main orb -->
+  <circle cx="60" cy="67" r="7.5" fill="url(#goldCore)" filter="url(#glowMd)"/>
+  <!-- Bright center -->
+  <circle cx="60" cy="67" r="3"   fill="#fffbeb"/>
+  <circle cx="60" cy="67" r="1.4" fill="#ffffff"/>
 </svg>

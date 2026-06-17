@@ -1,7 +1,8 @@
 <div align="center">
-  <img src="public/icon.svg" alt="NeuronMap Logo" width="96" height="96"/>
+  <img src="public/icon.svg" alt="NeuronMap Logo" width="108" height="108" style="border-radius:24px"/>
   <h1>NeuronMap</h1>
-  <p>上传文档，AI 自动提取知识节点，构建你的专属知识技能树</p>
+  <p>炼知 · 自筑知识谱系</p>
+  <p><sub>上传文档，AI 自动提取知识节点，构建你的专属知识技能树</sub></p>
 
   ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
   ![React](https://img.shields.io/badge/React-19-61dafb?logo=react)
@@ -38,6 +39,48 @@ NeuronMap 是一个 AI 驱动的知识图谱工具。上传 PDF 文档后，Clau
 | AI | [Anthropic Claude API](https://docs.anthropic.com/)（`claude-sonnet-4-6`） | SDK 0.104 |
 | 文件存储 | Supabase Storage | — |
 | 部署 | [Vercel](https://vercel.com/)（免费 Hobby 套餐） | — |
+
+---
+
+## 核心技术说明
+
+### Prisma — 数据库翻译官
+
+Prisma 是一个 ORM（对象关系映射），让你用 TypeScript 操作数据库，而不需要手写 SQL。
+
+**它做了三件事：**
+
+**1. Schema 定义（`prisma/schema.prisma`）**
+在这里声明你有哪些数据表和字段，像写配置文件一样：
+```prisma
+model User {
+  id    String @id @default(cuid())
+  email String @unique
+  name  String?
+}
+```
+
+**2. 自动翻译成 SQL**
+你写 TypeScript，Prisma 帮你翻译成数据库查询：
+```ts
+// 你写的
+const user = await db.user.findUnique({ where: { email: 'admin' } })
+
+// Prisma 翻译成
+// SELECT * FROM "User" WHERE email = 'admin' LIMIT 1
+```
+
+**3. 类型安全（`src/generated/prisma/`）**
+Prisma 根据你的 Schema 自动生成 TypeScript 类型。`user.email`、`user.name` 都有类型提示，字段名写错会在编译时报错，而不是运行时崩溃。
+
+**本项目 Prisma v7 的特别说明：**
+Prisma v7 使用 WASM 查询编译器，不再内置原生驱动。初始化时必须传入 driver adapter：
+```ts
+import { PrismaPg } from '@prisma/adapter-pg'
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+const db = new PrismaClient({ adapter })
+```
 
 ---
 
