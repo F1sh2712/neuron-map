@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeuronMap — 知识图谱</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .node { cursor: pointer; transition: all 0.15s; }
+    .node:hover circle.bg { filter: brightness(1.3); }
+    .node.active circle.bg { filter: brightness(1.4); }
+    .node.active circle.ring { stroke: #a78bfa; stroke-width: 2; }
+    #chatPanel { transition: transform 0.3s ease; }
+    .chat-bubble-ai { background: #1c2048; border: 1px solid #2a2f58; }
+    .chat-bubble-user { background: #4c1d95; }
+  </style>
+</head>
+<body class="bg-[#0d0f1f] h-screen font-sans text-white flex flex-col overflow-hidden">
+
+  <!-- Top Nav -->
+  <nav class="border-b border-[#2a2f58] px-4 py-2.5 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <a href="dashboard.html" class="text-zinc-400 hover:text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <div>
+        <p class="text-sm font-medium text-white leading-none">操作系统教材.pdf</p>
+        <p class="text-xs text-zinc-500 mt-0.5">23 个节点 · 18 条关系</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="toggleChat"
+        class="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-[#2a2f58] hover:border-violet-500 text-zinc-400 hover:text-white transition-colors"
+        onclick="toggleChat()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        AI 对话
+      </button>
+      <button class="text-zinc-600 hover:text-zinc-400 p-1.5 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main area -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- Graph canvas -->
+    <div class="flex-1 relative overflow-hidden" id="graphArea">
+      <svg id="graphSvg" width="100%" height="100%" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet">
+
+        <!-- Edges -->
+        <g stroke="#2a2f58" stroke-width="1.5" fill="none">
+          <!-- 进程管理 → 进程调度 -->
+          <line x1="400" y1="80"  x2="230" y2="170" stroke="#3730a3" stroke-width="2"/>
+          <!-- 进程管理 → 内存管理 -->
+          <line x1="400" y1="80"  x2="570" y2="170" stroke="#3730a3" stroke-width="2"/>
+          <!-- 进程管理 → 文件系统 -->
+          <line x1="400" y1="80"  x2="400" y2="195" stroke="#3730a3" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <!-- 进程调度 → 调度算法 -->
+          <line x1="230" y1="170" x2="130" y2="280" stroke="#4c1d95" stroke-width="1.5"/>
+          <!-- 进程调度 → 优先级调度 -->
+          <line x1="230" y1="170" x2="310" y2="280" stroke="#4c1d95" stroke-width="1.5"/>
+          <!-- 内存管理 → 虚拟内存 -->
+          <line x1="570" y1="170" x2="490" y2="280" stroke="#4c1d95" stroke-width="1.5"/>
+          <!-- 内存管理 → 分页机制 -->
+          <line x1="570" y1="170" x2="650" y2="280" stroke="#4c1d95" stroke-width="1.5"/>
+          <!-- 文件系统 → FAT -->
+          <line x1="400" y1="215" x2="400" y2="300" stroke="#4c1d95" stroke-width="1.5"/>
+          <!-- IPC 弱关系 -->
+          <line x1="230" y1="170" x2="490" y2="280" stroke="#2a2f58" stroke-width="1" stroke-dasharray="3,3"/>
+        </g>
+
+        <!-- Node: 进程管理 (ROOT) -->
+        <g class="node" onclick="selectNode('process-mgmt')">
+          <circle cx="400" cy="80" r="42" class="bg" fill="#1e1b4b" stroke="#6d28d9" stroke-width="1.5"/>
+          <circle cx="400" cy="80" r="42" class="ring" fill="none" stroke="transparent" stroke-width="2"/>
+          <circle cx="400" cy="80" r="8" fill="#a78bfa"/>
+          <circle cx="400" cy="80" r="4" fill="#e9d5ff"/>
+          <text x="400" y="135" text-anchor="middle" fill="#a78bfa" font-size="12" font-weight="600">进程管理</text>
+        </g>
+
+        <!-- Node: 进程调度 -->
+        <g class="node" onclick="selectNode('scheduling')">
+          <circle cx="230" cy="170" r="32" class="bg" fill="#1e1b4b" stroke="#4c1d95" stroke-width="1.2"/>
+          <circle cx="230" cy="170" r="32" class="ring" fill="none" stroke="transparent" stroke-width="2"/>
+          <circle cx="230" cy="170" r="6" fill="#8b5cf6"/>
+          <circle cx="230" cy="170" r="3" fill="#ddd6fe"/>
+          <text x="230" y="215" text-anchor="middle" fill="#8b5cf6" font-size="11">进程调度</text>
+        </g>
+
+        <!-- Node: 内存管理 -->
+        <g class="node" onclick="selectNode('memory')">
+          <circle cx="570" cy="170" r="32" class="bg" fill="#1e1b4b" stroke="#4c1d95" stroke-width="1.2"/>
+          <circle cx="570" cy="170" r="32" class="ring" fill="none" stroke="transparent" stroke-width="2"/>
+          <circle cx="570" cy="170" r="6" fill="#8b5cf6"/>
+          <circle cx="570" cy="170" r="3" fill="#ddd6fe"/>
+          <text x="570" y="215" text-anchor="middle" fill="#8b5cf6" font-size="11">内存管理</text>
+        </g>
+
+        <!-- Node: 文件系统 -->
+        <g class="node" onclick="selectNode('filesystem')">
+          <circle cx="400" cy="210" r="26" class="bg" fill="#0f172a" stroke="#1e3a5f" stroke-width="1.2"/>
+          <circle cx="400" cy="210" r="26" class="ring" fill="none" stroke="transparent" stroke-width="2"/>
+          <circle cx="400" cy="210" r="5" fill="#38bdf8"/>
+          <circle cx="400" cy="210" r="2.5" fill="#bae6fd"/>
+          <text x="400" y="248" text-anchor="middle" fill="#38bdf8" font-size="10">文件系统</text>
+        </g>
+
+        <!-- Node: 调度算法 -->
+        <g class="node" onclick="selectNode('sched-algo')">
+          <circle cx="130" cy="280" r="26" class="bg" fill="#0f172a" stroke="#2d1b69" stroke-width="1.2"/>
+          <circle cx="130" cy="280" r="26" class="ring" fill="none" stroke="transparent" stroke-width="2"/>
+          <circle cx="130" cy="280" r="5" fill="#7c3aed"/>
+          <circle cx="130" cy="280" r="2.5" fill="#ddd6fe"/>
+          <text x="130" y="318" text-anchor="middle" fill="#7c3aed" font-size="10">调度算法</text>
+        </g>
+
+        <!-- Node: 优先级调度 -->
+        <g class="node" onclick="selectNode('priority')">
+          <circle cx="310" cy="280" r="26" class="bg" fill="#0f172a" stroke="#2d1b69" stroke-width="1.2"/>
+          <circle cx="310" cy="280" r="26" class="ring" fill="none" stroke="transparent" stroke-width="2"/>
+          <circle cx="310" cy="280" r="5" fill="#7c3aed"/>
+          <circle cx="310" cy="280" r="2.5" fill="#ddd6fe"/>
+          <text x="310" y="318" text-anchor="middle" fill="#7c3aed" font-size="10">优先级调度</text>
+        </g>
+
+        <!-- Node: 虚拟内存 -->
+        <g class="node" onclick="selectNode('virtual-mem')">
+          <circle cx="490" cy="280" r="26" class="bg" fill="#0f172a" stroke="#2d1b69" stroke-width="1.2"/>
+          <circle cx="490" cy="280" r="26" class="ring" fill="none" stroke="transparent" stroke-width="2"/>
+          <circle cx="490" cy="280" r="5" fill="#7c3aed"/>
+          <circle cx="490" cy="280" r="2.5" fill="#ddd6fe"/>
+          <text x="490" y="318" text-anchor="middle" fill="#7c3aed" font-size="10">虚拟内存</text>
+        </g>
+
+        <!-- Node: 分页机制 -->
+        <g class="node" onclick="selectNode('paging')">
+          <circle cx="650" cy="280" r="26" class="bg" fill="#0f172a" stroke="#2d1b69" stroke-width="1.2"/>
+          <circle cx="650" cy="280" r="26" class="ring" fill="none" stroke="transparent" stroke-width="2"/>
+          <circle cx="650" cy="280" r="5" fill="#7c3aed"/>
+          <circle cx="650" cy="280" r="2.5" fill="#ddd6fe"/>
+          <text x="650" y="318" text-anchor="middle" fill="#7c3aed" font-size="10">分页机制</text>
+        </g>
+
+        <!-- Node: FAT/inode -->
+        <g class="node" onclick="selectNode('fat')">
+          <circle cx="400" cy="360" r="22" class="bg" fill="#0a0f1a" stroke="#1e3a5f" stroke-width="1"/>
+          <circle cx="400" cy="360" r="22" class="ring" fill="none" stroke="transparent" stroke-width="2"/>
+          <circle cx="400" cy="360" r="4" fill="#0ea5e9"/>
+          <circle cx="400" cy="360" r="2" fill="#bae6fd"/>
+          <text x="400" y="394" text-anchor="middle" fill="#0ea5e9" font-size="10">FAT/inode</text>
+        </g>
+
+        <!-- Scale hint -->
+        <text x="20" y="480" fill="#2a2f58" font-size="10">滚轮缩放 · 拖拽移动（原型中已禁用）</text>
+      </svg>
+    </div>
+
+    <!-- Right sidebar: Node Detail -->
+    <div id="sidebar"
+      class="w-72 border-l border-[#2a2f58] bg-[#0d0f1f] flex-shrink-0 overflow-y-auto transition-all hidden lg:block">
+      <div id="sidebarEmpty" class="p-6 text-center text-zinc-600 text-sm mt-16">
+        <svg class="w-8 h-8 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/>
+        </svg>
+        点击图谱中的节点<br/>查看详细信息
+      </div>
+      <div id="sidebarContent" class="hidden p-5">
+        <div class="flex items-start justify-between mb-4">
+          <h3 id="nodeTitle" class="text-base font-semibold text-white leading-tight"></h3>
+          <span id="nodePage" class="text-xs text-zinc-500 flex-shrink-0 ml-2 mt-0.5 bg-[#1c2048] px-2 py-0.5 rounded"></span>
+        </div>
+        <p id="nodeSummary" class="text-sm text-zinc-400 leading-relaxed mb-5"></p>
+        <div class="border-t border-[#2a2f58] pt-4">
+          <p class="text-xs text-zinc-600 mb-2.5">相关节点</p>
+          <div id="nodeRelated" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat panel (bottom slide-up) -->
+  <div id="chatPanel"
+    class="border-t border-[#2a2f58] bg-[#0d0f1f] flex-shrink-0 hidden"
+    style="height: 220px;">
+    <div class="flex flex-col h-full">
+      <!-- Messages -->
+      <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3">
+        <div class="flex gap-3">
+          <div class="w-6 h-6 rounded-full bg-violet-700 flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5">N</div>
+          <div class="chat-bubble-ai rounded-xl px-3 py-2 text-sm text-zinc-300 max-w-lg leading-relaxed">
+            你好！我已读取《操作系统教材》中的 23 个知识节点，可以问我任何关于这份文档的问题。
+          </div>
+        </div>
+      </div>
+      <!-- Input -->
+      <div class="border-t border-[#1c2048] px-4 py-3 flex gap-2">
+        <input id="chatInput" type="text" placeholder="问一个关于这份文档的问题…"
+          class="flex-1 bg-[#151729] border border-[#2a2f58] rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500"
+          onkeydown="if(event.key==='Enter') sendChat()"/>
+        <button onclick="sendChat()"
+          class="bg-violet-600 hover:bg-violet-500 text-white px-3 py-2 rounded-lg text-sm transition-colors flex-shrink-0">
+          发送
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const nodes = {
+      'process-mgmt': {
+        title: '进程管理',
+        page: 'P.12–45',
+        summary: '操作系统的核心功能之一，负责管理系统中所有进程的生命周期，包括创建、调度、同步和终止。进程管理是实现多道程序设计的基础。',
+        related: ['进程调度', '内存管理', 'IPC 通信']
+      },
+      'scheduling': {
+        title: '进程调度',
+        page: 'P.47',
+        summary: '进程调度是操作系统决定哪个就绪进程获得 CPU 使用权的机制。调度策略直接影响系统的响应时间和吞吐量。',
+        related: ['调度算法', '优先级调度', '进程管理']
+      },
+      'memory': {
+        title: '内存管理',
+        page: 'P.89',
+        summary: '内存管理负责分配和回收物理内存，并通过虚拟内存技术为进程提供比物理内存更大的地址空间。',
+        related: ['虚拟内存', '分页机制', '进程管理']
+      },
+      'filesystem': {
+        title: '文件系统',
+        page: 'P.134',
+        summary: '文件系统提供了一种组织和存储数据的结构化方式，屏蔽了底层存储设备的差异，向用户和应用程序提供统一的文件操作接口。',
+        related: ['FAT/inode', '进程管理']
+      },
+      'sched-algo': {
+        title: '调度算法',
+        page: 'P.52',
+        summary: '常见调度算法包括先来先服务（FCFS）、短作业优先（SJF）、时间片轮转（RR）和多级反馈队列。各算法在响应时间、吞吐量和公平性之间有不同的权衡。',
+        related: ['进程调度', '优先级调度']
+      },
+      'priority': {
+        title: '优先级调度',
+        page: 'P.58',
+        summary: '为每个进程分配优先级，CPU 总是执行就绪队列中优先级最高的进程。可能导致低优先级进程"饥饿"，通常配合老化（Aging）机制使用。',
+        related: ['调度算法', '进程调度']
+      },
+      'virtual-mem': {
+        title: '虚拟内存',
+        page: 'P.95',
+        summary: '虚拟内存是一种内存管理技术，让每个进程以为自己独占整个地址空间。物理内存不足时，可将部分内容换出到磁盘（Swap），按需调入。',
+        related: ['分页机制', '内存管理']
+      },
+      'paging': {
+        title: '分页机制',
+        page: 'P.102',
+        summary: '将虚拟地址空间和物理内存均划分为固定大小的页（Page）和页框（Frame）。通过页表（Page Table）完成虚拟地址到物理地址的映射，有效解决外部碎片问题。',
+        related: ['虚拟内存', '内存管理']
+      },
+      'fat': {
+        title: 'FAT / inode',
+        page: 'P.141',
+        summary: 'FAT（文件分配表）用于记录磁盘块的分配状态，常见于 Windows 系统；inode 是 Unix/Linux 文件系统的核心数据结构，存储文件元数据和数据块指针。',
+        related: ['文件系统']
+      }
+    }
+
+    let activeNode = null
+
+    function selectNode(id) {
+      // Clear previous
+      if (activeNode) {
+        document.querySelectorAll('.node').forEach(n => n.classList.remove('active'))
+      }
+      // Set active
+      event.currentTarget.classList.add('active')
+      activeNode = id
+
+      const data = nodes[id]
+      if (!data) return
+
+      document.getElementById('sidebarEmpty').classList.add('hidden')
+      document.getElementById('sidebarContent').classList.remove('hidden')
+      document.getElementById('nodeTitle').textContent = data.title
+      document.getElementById('nodePage').textContent = data.page
+      document.getElementById('nodeSummary').textContent = data.summary
+
+      const relDiv = document.getElementById('nodeRelated')
+      relDiv.innerHTML = data.related.map(r =>
+        `<div class="flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 cursor-pointer">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          ${r}
+        </div>`
+      ).join('')
+    }
+
+    let chatOpen = false
+    function toggleChat() {
+      chatOpen = !chatOpen
+      const panel = document.getElementById('chatPanel')
+      if (chatOpen) {
+        panel.classList.remove('hidden')
+      } else {
+        panel.classList.add('hidden')
+      }
+    }
+
+    const mockReplies = {
+      '进程调度': '根据文档第 47 页，进程调度是操作系统决定哪个就绪进程获得 CPU 使用权的机制。文档中介绍了 FCFS、SJF 和时间片轮转三种主要调度策略，其中时间片轮转最适合交互式系统。',
+      '虚拟内存': '根据文档第 95 页，虚拟内存让每个进程以为自己独占整个地址空间。结合节点【分页机制】（P.102）可以看出，系统通过页表完成虚拟地址到物理地址的映射。',
+      '内存': '文档中关于内存管理的内容分布在 P.89–133，核心节点有【内存管理】→【虚拟内存】→【分页机制】，三者是递进关系：内存管理是总体策略，虚拟内存是实现方式，分页是具体机制。'
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chatInput')
+      const msg = input.value.trim()
+      if (!msg) return
+
+      const container = document.getElementById('chatMessages')
+
+      // User bubble
+      container.innerHTML += `
+        <div class="flex gap-3 justify-end">
+          <div class="chat-bubble-user rounded-xl px-3 py-2 text-sm text-white max-w-xs leading-relaxed">${msg}</div>
+          <div class="w-6 h-6 rounded-full bg-zinc-700 flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5">A</div>
+        </div>`
+
+      input.value = ''
+
+      // Mock AI reply
+      setTimeout(() => {
+        let reply = '根据文档中的知识图谱，这个问题涉及到节点【进程管理】（P.12）。'
+        for (const [key, val] of Object.entries(mockReplies)) {
+          if (msg.includes(key)) { reply = val; break }
+        }
+        container.innerHTML += `
+          <div class="flex gap-3">
+            <div class="w-6 h-6 rounded-full bg-violet-700 flex-shrink-0 flex items-center justify-center text-xs font-bold mt-0.5">N</div>
+            <div class="chat-bubble-ai rounded-xl px-3 py-2 text-sm text-zinc-300 max-w-lg leading-relaxed">${reply}</div>
+          </div>`
+        container.scrollTop = container.scrollHeight
+      }, 600)
+
+      container.scrollTop = container.scrollHeight
+    }
+  </script>
+
+</body>
+</html>

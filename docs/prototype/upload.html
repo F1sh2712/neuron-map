@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeuronMap — 上传文档</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0d0f1f] min-h-screen font-sans text-white flex items-center justify-center">
+
+  <div class="w-full max-w-lg">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6 px-1">
+      <a href="dashboard.html" class="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        返回文档列表
+      </a>
+      <span class="text-xs text-zinc-700">[ 原型 ]</span>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-[#151729] border border-[#2a2f58] rounded-2xl p-8">
+      <h1 class="text-xl font-bold mb-1">上传新文档</h1>
+      <p class="text-sm text-zinc-500 mb-7">支持 PDF 格式，最大 20MB</p>
+
+      <!-- Drop zone — state: empty -->
+      <div id="dropzone"
+        class="border-2 border-dashed border-[#2a2f58] hover:border-violet-500 rounded-xl p-10 text-center transition-colors cursor-pointer mb-6"
+        onclick="selectFile()">
+        <div class="flex flex-col items-center gap-3">
+          <svg class="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          <div>
+            <p class="text-zinc-300 font-medium">拖拽 PDF 文件到此处</p>
+            <p class="text-zinc-600 text-sm mt-1">或</p>
+          </div>
+          <button class="bg-[#1c2048] hover:bg-[#252b5c] text-zinc-300 text-sm px-4 py-2 rounded-lg border border-[#2a2f58] transition-colors">
+            选择文件
+          </button>
+        </div>
+      </div>
+
+      <!-- File selected state (hidden by default) -->
+      <div id="fileSelected" class="hidden mb-6">
+        <div class="bg-[#0d0f1f] border border-[#2a2f58] rounded-xl p-4 flex items-center gap-4">
+          <div class="w-10 h-12 bg-[#1c2048] rounded-lg flex items-center justify-center border border-[#2a2f58]">
+            <svg class="w-5 h-6 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+              <path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-white">操作系统教材.pdf</p>
+            <p class="text-xs text-zinc-500 mt-0.5">8.2 MB</p>
+          </div>
+          <button onclick="removeFile()" class="text-zinc-600 hover:text-red-400 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- File info -->
+        <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div class="bg-[#0d0f1f] rounded-lg p-3 border border-[#1c2048]">
+            <p class="text-zinc-500 text-xs">文件格式</p>
+            <p class="text-zinc-200 mt-0.5">PDF</p>
+          </div>
+          <div class="bg-[#0d0f1f] rounded-lg p-3 border border-[#1c2048]">
+            <p class="text-zinc-500 text-xs">预估处理时间</p>
+            <p class="text-zinc-200 mt-0.5">约 3–5 分钟</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3">
+        <a href="dashboard.html"
+          class="flex-1 text-center text-sm text-zinc-400 hover:text-white border border-[#2a2f58] hover:border-zinc-500 rounded-lg py-2.5 transition-colors">
+          取消
+        </a>
+        <a id="submitBtn" href="processing.html"
+          class="flex-1 text-center text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg py-2.5 transition-colors opacity-40 pointer-events-none">
+          开始分析
+        </a>
+      </div>
+    </div>
+
+    <p class="text-center text-xs text-zinc-700 mt-6">[ 低保真原型 · 数据为 Mock ]</p>
+  </div>
+
+  <script>
+    function selectFile() {
+      document.getElementById('dropzone').classList.add('hidden')
+      document.getElementById('fileSelected').classList.remove('hidden')
+      const btn = document.getElementById('submitBtn')
+      btn.classList.remove('opacity-40', 'pointer-events-none')
+    }
+    function removeFile() {
+      document.getElementById('dropzone').classList.remove('hidden')
+      document.getElementById('fileSelected').classList.add('hidden')
+      const btn = document.getElementById('submitBtn')
+      btn.classList.add('opacity-40', 'pointer-events-none')
+    }
+  </script>
+
+</body>
+</html>

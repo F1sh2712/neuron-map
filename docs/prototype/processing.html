@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeuronMap — AI 分析中</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0d0f1f] min-h-screen font-sans text-white flex items-center justify-center">
+
+  <div class="w-full max-w-md text-center">
+
+    <!-- Animated icon -->
+    <div class="relative w-24 h-24 mx-auto mb-8">
+      <div class="absolute inset-0 rounded-full border-2 border-violet-500 border-t-transparent animate-spin"></div>
+      <div class="absolute inset-2 rounded-full border border-violet-700 border-b-transparent animate-spin" style="animation-direction:reverse; animation-duration:1.5s"></div>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <svg viewBox="0 0 120 120" class="w-12 h-12">
+          <circle cx="60" cy="28" r="11" fill="none" stroke="#60a5fa" stroke-width="1.5"/>
+          <circle cx="60" cy="17" r="2.5" fill="#93c5fd"/>
+          <circle cx="71" cy="28" r="2.5" fill="#93c5fd"/>
+          <circle cx="60" cy="39" r="2.5" fill="#93c5fd"/>
+          <circle cx="49" cy="28" r="2.5" fill="#93c5fd"/>
+          <line x1="60" y1="39" x2="60" y2="50" stroke="#60a5fa" stroke-width="1.2"/>
+          <line x1="60" y1="50" x2="47" y2="60" stroke="#60a5fa" stroke-width="1.2"/>
+          <line x1="60" y1="50" x2="73" y2="60" stroke="#60a5fa" stroke-width="1.2"/>
+          <line x1="47" y1="60" x2="60" y2="72" stroke="#60a5fa" stroke-width="1.2"/>
+          <line x1="73" y1="60" x2="60" y2="72" stroke="#60a5fa" stroke-width="1.2"/>
+          <circle cx="47" cy="60" r="3" fill="#93c5fd"/>
+          <circle cx="73" cy="60" r="3" fill="#93c5fd"/>
+          <circle cx="60" cy="72" r="8" fill="#f59e0b" opacity="0.9"/>
+          <circle cx="60" cy="72" r="3.5" fill="#fef9c3"/>
+        </svg>
+      </div>
+    </div>
+
+    <h1 class="text-xl font-bold mb-1">AI 正在分析文档</h1>
+    <p class="text-sm text-zinc-500 mb-8">操作系统教材.pdf</p>
+
+    <!-- Steps -->
+    <div class="bg-[#151729] border border-[#2a2f58] rounded-2xl p-6 text-left space-y-4 mb-6">
+
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <span class="text-sm text-zinc-300">文件上传完成</span>
+        <span class="ml-auto text-xs text-zinc-600">68 页</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <span class="text-sm text-zinc-300">文本提取完成</span>
+        <span class="ml-auto text-xs text-zinc-600">68 页</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-full border-2 border-violet-500 flex items-center justify-center flex-shrink-0 animate-pulse">
+          <div class="w-2 h-2 rounded-full bg-violet-400"></div>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm text-white font-medium">识别知识节点</span>
+            <span class="text-xs text-violet-400" id="pageCount">第 32 / 68 页</span>
+          </div>
+          <div class="h-1.5 bg-[#0d0f1f] rounded-full overflow-hidden">
+            <div id="progressBar" class="h-full bg-violet-500 rounded-full transition-all duration-500" style="width:47%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 opacity-40">
+        <div class="w-6 h-6 rounded-full border border-[#2a2f58] flex-shrink-0"></div>
+        <span class="text-sm text-zinc-500">构建关系图谱</span>
+      </div>
+
+      <div class="flex items-center gap-3 opacity-40">
+        <div class="w-6 h-6 rounded-full border border-[#2a2f58] flex-shrink-0"></div>
+        <span class="text-sm text-zinc-500">保存到数据库</span>
+      </div>
+
+    </div>
+
+    <p class="text-sm text-zinc-500 mb-6" id="timeLeft">预计还需 <span class="text-white font-medium">2 分 14 秒</span></p>
+
+    <div class="flex gap-3 justify-center">
+      <a href="dashboard.html"
+        class="text-sm text-zinc-400 hover:text-white border border-[#2a2f58] px-4 py-2 rounded-lg transition-colors">
+        在后台继续，返回列表
+      </a>
+      <a id="viewGraphBtn" href="graph.html"
+        class="text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-lg transition-colors opacity-40 pointer-events-none">
+        查看图谱
+      </a>
+    </div>
+
+    <p class="text-xs text-zinc-700 mt-8">[ 低保真原型 · 数据为 Mock ]</p>
+  </div>
+
+  <script>
+    // Simulate progress
+    let progress = 47
+    let page = 32
+    const total = 68
+
+    const interval = setInterval(() => {
+      progress += Math.random() * 3
+      page = Math.min(total, Math.round(progress / 100 * total))
+
+      if (progress >= 100) {
+        progress = 100
+        page = total
+        clearInterval(interval)
+        document.getElementById('pageCount').textContent = `${total} / ${total} 页`
+        document.getElementById('progressBar').style.width = '100%'
+        document.getElementById('timeLeft').innerHTML = '分析完成！<span class="text-green-400 font-medium">✓</span>'
+        const btn = document.getElementById('viewGraphBtn')
+        btn.classList.remove('opacity-40', 'pointer-events-none')
+        return
+      }
+
+      document.getElementById('pageCount').textContent = `第 ${page} / ${total} 页`
+      document.getElementById('progressBar').style.width = `${Math.min(progress, 100)}%`
+      const remaining = Math.round((100 - progress) / 3 * 2)
+      const m = Math.floor(remaining / 60)
+      const s = remaining % 60
+      document.getElementById('timeLeft').innerHTML = `预计还需 <span class="text-white font-medium">${m} 分 ${s} 秒</span>`
+    }, 800)
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>图谱布局对比</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .node-circle { cursor: pointer; }
+    .node-label { pointer-events: none; font-family: sans-serif; }
+    .link { stroke-opacity: 0.5; }
+  </style>
+</head>
+<body class="bg-[#0d0f1f] text-white font-sans min-h-screen p-6">
+
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-xl font-bold mb-1">两种图谱布局对比</h1>
+    <p class="text-zinc-500 text-sm mb-6">同样的数据，不同的排布方式 — 拖拽节点感受差异</p>
+
+    <div class="grid grid-cols-2 gap-4">
+
+      <!-- 左：力导向 -->
+      <div class="bg-[#151729] border border-[#2a2f58] rounded-2xl overflow-hidden">
+        <div class="px-5 py-3 border-b border-[#2a2f58] flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+          <span class="font-semibold text-sm">力导向布局</span>
+          <span class="text-xs text-zinc-500 ml-1">Force-Directed</span>
+        </div>
+        <div class="px-5 pt-2 pb-3 text-xs text-zinc-500 leading-relaxed">
+          节点像磁铁，互相排斥、边拉近。<br/>
+          自动聚类，<strong class="text-zinc-300">关联紧密的节点自然靠在一起</strong>。<br/>
+          可拖拽，松手后节点继续"弹动"。
+        </div>
+        <svg id="force" width="100%" height="320" style="display:block"></svg>
+      </div>
+
+      <!-- 右：层级树状 -->
+      <div class="bg-[#151729] border border-[#2a2f58] rounded-2xl overflow-hidden">
+        <div class="px-5 py-3 border-b border-[#2a2f58] flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+          <span class="font-semibold text-sm">层级树状布局</span>
+          <span class="text-xs text-zinc-500 ml-1">Hierarchy Tree</span>
+        </div>
+        <div class="px-5 pt-2 pb-3 text-xs text-zinc-500 leading-relaxed">
+          从根节点往下展开，像目录结构。<br/>
+          <strong class="text-zinc-300">层级关系一目了然</strong>，但位置固定不动。<br/>
+          适合有明确父子关系的内容。
+        </div>
+        <svg id="tree" width="100%" height="320" style="display:block"></svg>
+      </div>
+    </div>
+
+    <!-- 说明 -->
+    <div class="mt-4 grid grid-cols-2 gap-4 text-xs">
+      <div class="bg-[#0d0f1f] border border-[#1c2048] rounded-xl p-4 space-y-2">
+        <p class="text-zinc-300 font-medium mb-2">力导向 — 适合什么场景？</p>
+        <p class="text-zinc-500">✅ 知识节点之间关系复杂、没有明显父子层级</p>
+        <p class="text-zinc-500">✅ 想看"哪些概念关系最密切"（自然聚类）</p>
+        <p class="text-zinc-500">✅ 探索式浏览，不知道从哪里开始</p>
+        <p class="text-zinc-500">❌ 节点多时会有点乱，需要手动拖拽整理</p>
+        <p class="text-zinc-500">❌ 每次打开位置不固定（除非保存坐标）</p>
+      </div>
+      <div class="bg-[#0d0f1f] border border-[#1c2048] rounded-xl p-4 space-y-2">
+        <p class="text-zinc-300 font-medium mb-2">层级树 — 适合什么场景？</p>
+        <p class="text-zinc-500">✅ 教材本身有清晰章节结构（第一章 → 第二节）</p>
+        <p class="text-zinc-500">✅ 用户需要按顺序学，结构稳定好找</p>
+        <p class="text-zinc-500">❌ 表达不了"跨章节"的概念关联</p>
+        <p class="text-zinc-500">❌ 如果 AI 提取的节点没有明确父子关系，会强行乱套层级</p>
+      </div>
+    </div>
+
+    <div class="mt-4 bg-violet-900/20 border border-violet-800/40 rounded-xl p-4 text-sm">
+      <span class="text-violet-300 font-medium">核心区别一句话：</span>
+      <span class="text-zinc-300 ml-2">力导向 = 节点自己找位置；层级树 = 人/AI 规定位置。</span>
+    </div>
+
+    <p class="text-center text-xs text-zinc-700 mt-4">[ 对比 Demo · 拖拽左侧节点感受力导向的"弹性" ]</p>
+  </div>
+
+<script>
+// ── 共享数据 ─────────────────────────────────────────
+const nodes = [
+  { id: '操作系统', r: 18, color: '#7c3aed' },
+  { id: '进程管理', r: 14, color: '#6d28d9' },
+  { id: '内存管理', r: 14, color: '#6d28d9' },
+  { id: '文件系统', r: 14, color: '#6d28d9' },
+  { id: '进程调度', r: 10, color: '#4c1d95' },
+  { id: '虚拟内存', r: 10, color: '#4c1d95' },
+  { id: '分页机制', r: 10, color: '#4c1d95' },
+  { id: '调度算法', r: 10, color: '#4c1d95' },
+  { id: 'inode',    r: 9,  color: '#1e3a8a' },
+  { id: 'FAT表',    r: 9,  color: '#1e3a8a' },
+  { id: 'IPC通信',  r: 9,  color: '#1e3a8a' },
+]
+const links = [
+  { source: '操作系统', target: '进程管理' },
+  { source: '操作系统', target: '内存管理' },
+  { source: '操作系统', target: '文件系统' },
+  { source: '进程管理', target: '进程调度' },
+  { source: '进程管理', target: 'IPC通信' },
+  { source: '内存管理', target: '虚拟内存' },
+  { source: '内存管理', target: '分页机制' },
+  { source: '进程调度', target: '调度算法' },
+  { source: '文件系统', target: 'inode' },
+  { source: '文件系统', target: 'FAT表' },
+  { source: '虚拟内存', target: '分页机制' },
+]
+
+// ── 力导向图 ─────────────────────────────────────────
+(function () {
+  const svgEl = document.getElementById('force')
+  const W = svgEl.clientWidth || 420
+  const H = 320
+
+  const nodesData = nodes.map(d => ({ ...d }))
+  const linksData = links.map(d => ({ ...d }))
+
+  const svg = d3.select('#force')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+
+  const sim = d3.forceSimulation(nodesData)
+    .force('link', d3.forceLink(linksData).id(d => d.id).distance(60))
+    .force('charge', d3.forceManyBody().strength(-180))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collision', d3.forceCollide(d => d.r + 14))
+
+  const link = svg.append('g')
+    .selectAll('line')
+    .data(linksData)
+    .join('line')
+    .attr('class', 'link')
+    .attr('stroke', '#3730a3')
+    .attr('stroke-width', 1.5)
+
+  const node = svg.append('g')
+    .selectAll('g')
+    .data(nodesData)
+    .join('g')
+    .call(d3.drag()
+      .on('start', (event, d) => {
+        if (!event.active) sim.alphaTarget(0.3).restart()
+        d.fx = d.x; d.fy = d.y
+      })
+      .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y })
+      .on('end', (event, d) => {
+        if (!event.active) sim.alphaTarget(0)
+        d.fx = null; d.fy = null
+      })
+    )
+
+  node.append('circle')
+    .attr('r', d => d.r)
+    .attr('fill', d => d.color)
+    .attr('stroke', '#a78bfa')
+    .attr('stroke-width', 1)
+
+  node.append('text')
+    .attr('class', 'node-label')
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => d.r + 12)
+    .attr('fill', '#c4b5fd')
+    .attr('font-size', d => d.r > 12 ? 11 : 9)
+    .text(d => d.id)
+
+  sim.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x).attr('y2', d => d.target.y)
+    node.attr('transform', d => `translate(${d.x},${d.y})`)
+  })
+})()
+
+// ── 层级树状图 ─────────────────────────────────────────
+(function () {
+  const svgEl = document.getElementById('tree')
+  const W = svgEl.clientWidth || 420
+  const H = 320
+  const margin = { top: 30, right: 20, bottom: 20, left: 20 }
+
+  const treeData = {
+    id: '操作系统',
+    children: [
+      {
+        id: '进程管理',
+        children: [
+          { id: '进程调度', children: [{ id: '调度算法' }] },
+          { id: 'IPC通信' }
+        ]
+      },
+      {
+        id: '内存管理',
+        children: [
+          { id: '虚拟内存', children: [{ id: '分页机制' }] },
+        ]
+      },
+      {
+        id: '文件系统',
+        children: [
+          { id: 'inode' },
+          { id: 'FAT表' }
+        ]
+      }
+    ]
+  }
+
+  const root = d3.hierarchy(treeData)
+  const treeLayout = d3.tree().size([W - margin.left - margin.right, H - margin.top - margin.bottom])
+  treeLayout(root)
+
+  const svg = d3.select('#tree')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .append('g')
+    .attr('transform', `translate(${margin.left},${margin.top})`)
+
+  svg.selectAll('path.link')
+    .data(root.links())
+    .join('path')
+    .attr('class', 'link')
+    .attr('fill', 'none')
+    .attr('stroke', '#1e40af')
+    .attr('stroke-width', 1.5)
+    .attr('d', d3.linkVertical().x(d => d.x).y(d => d.y))
+
+  const node = svg.selectAll('g.node')
+    .data(root.descendants())
+    .join('g')
+    .attr('class', 'node')
+    .attr('transform', d => `translate(${d.x},${d.y})`)
+
+  node.append('circle')
+    .attr('r', d => d.depth === 0 ? 14 : d.depth === 1 ? 10 : 7)
+    .attr('fill', d => d.depth === 0 ? '#1d4ed8' : d.depth === 1 ? '#1e40af' : '#1e3a8a')
+    .attr('stroke', '#60a5fa')
+    .attr('stroke-width', 1)
+
+  node.append('text')
+    .attr('class', 'node-label')
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => (d.depth === 0 ? 14 : d.depth === 1 ? 10 : 7) + 12)
+    .attr('fill', '#93c5fd')
+    .attr('font-size', d => d.depth === 0 ? 11 : 9)
+    .text(d => d.data.id)
+})()
+</script>
+
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeuronMap — 登录</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+</head>
+<body class="bg-[#0d0f1f] min-h-screen flex items-center justify-center font-sans">
+
+  <div class="w-full max-w-sm">
+    <!-- Logo -->
+    <div class="flex flex-col items-center mb-8">
+      <div class="w-16 h-16 bg-[#151729] rounded-2xl flex items-center justify-center mb-3 border border-[#2a2f58]">
+        <svg viewBox="0 0 120 120" class="w-12 h-12">
+          <circle cx="60" cy="28" r="11" fill="none" stroke="#60a5fa" stroke-width="1.2"/>
+          <circle cx="60" cy="17" r="2.2" fill="#93c5fd"/>
+          <circle cx="71" cy="28" r="2.2" fill="#93c5fd"/>
+          <circle cx="60" cy="39" r="2.2" fill="#93c5fd"/>
+          <circle cx="49" cy="28" r="2.2" fill="#93c5fd"/>
+          <line x1="60" y1="39" x2="60" y2="48" stroke="#60a5fa" stroke-width="1"/>
+          <line x1="60" y1="48" x2="47" y2="56" stroke="#60a5fa" stroke-width="1"/>
+          <line x1="60" y1="48" x2="73" y2="56" stroke="#60a5fa" stroke-width="1"/>
+          <line x1="47" y1="56" x2="60" y2="68" stroke="#60a5fa" stroke-width="1"/>
+          <line x1="73" y1="56" x2="60" y2="68" stroke="#60a5fa" stroke-width="1"/>
+          <line x1="47" y1="56" x2="38" y2="68" stroke="#60a5fa" stroke-width="1"/>
+          <line x1="73" y1="56" x2="82" y2="68" stroke="#60a5fa" stroke-width="1"/>
+          <circle cx="60" cy="48" r="2.5" fill="#93c5fd"/>
+          <circle cx="47" cy="56" r="2.5" fill="#93c5fd"/>
+          <circle cx="73" cy="56" r="2.5" fill="#93c5fd"/>
+          <circle cx="38" cy="68" r="2.2" fill="#7dd3fc"/>
+          <circle cx="82" cy="68" r="2.2" fill="#7dd3fc"/>
+          <circle cx="60" cy="68" r="7" fill="#f59e0b" opacity="0.9"/>
+          <circle cx="60" cy="68" r="3" fill="#fef9c3"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-white">NeuronMap</h1>
+      <p class="text-sm text-zinc-500 mt-1">炼知 · 自筑知识谱系</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-[#151729] border border-[#2a2f58] rounded-2xl p-8">
+      <h2 class="text-base font-semibold text-zinc-300 mb-6">登录你的账号</h2>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm text-zinc-400 mb-1.5">邮箱</label>
+          <input type="email" placeholder="you@example.com" value="admin@test.com"
+            class="w-full bg-[#0d0f1f] border border-[#2a2f58] rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500"/>
+        </div>
+        <div>
+          <label class="block text-sm text-zinc-400 mb-1.5">密码</label>
+          <input type="password" placeholder="••••••••" value="password"
+            class="w-full bg-[#0d0f1f] border border-[#2a2f58] rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500"/>
+        </div>
+
+        <a href="dashboard.html"
+          class="block w-full mt-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium text-center rounded-lg py-2.5 transition-colors">
+          登录
+        </a>
+      </div>
+
+      <p class="text-center text-sm text-zinc-500 mt-5">
+        还没有账号？
+        <a href="#" class="text-violet-400 hover:text-violet-300">点此注册</a>
+      </p>
+    </div>
+
+    <!-- Prototype label -->
+    <p class="text-center text-xs text-zinc-700 mt-6">[ 低保真原型 · 数据为 Mock ]</p>
+  </div>
+
+</body>
+</html>

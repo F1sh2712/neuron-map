@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeuronMap — 文档列表</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0d0f1f] min-h-screen font-sans text-white">
+
+  <!-- Top Nav -->
+  <nav class="border-b border-[#2a2f58] bg-[#0d0f1f] px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 bg-[#151729] rounded-xl flex items-center justify-center border border-[#2a2f58]">
+        <svg viewBox="0 0 120 120" class="w-6 h-6">
+          <circle cx="60" cy="28" r="11" fill="none" stroke="#60a5fa" stroke-width="1.5"/>
+          <circle cx="60" cy="17" r="2.5" fill="#93c5fd"/>
+          <circle cx="71" cy="28" r="2.5" fill="#93c5fd"/>
+          <circle cx="60" cy="39" r="2.5" fill="#93c5fd"/>
+          <circle cx="49" cy="28" r="2.5" fill="#93c5fd"/>
+          <line x1="60" y1="39" x2="60" y2="50" stroke="#60a5fa" stroke-width="1.2"/>
+          <line x1="60" y1="50" x2="47" y2="60" stroke="#60a5fa" stroke-width="1.2"/>
+          <line x1="60" y1="50" x2="73" y2="60" stroke="#60a5fa" stroke-width="1.2"/>
+          <line x1="47" y1="60" x2="60" y2="72" stroke="#60a5fa" stroke-width="1.2"/>
+          <line x1="73" y1="60" x2="60" y2="72" stroke="#60a5fa" stroke-width="1.2"/>
+          <circle cx="47" cy="60" r="3" fill="#93c5fd"/>
+          <circle cx="73" cy="60" r="3" fill="#93c5fd"/>
+          <circle cx="60" cy="72" r="8" fill="#f59e0b" opacity="0.9"/>
+          <circle cx="60" cy="72" r="3.5" fill="#fef9c3"/>
+        </svg>
+      </div>
+      <span class="font-semibold text-white">NeuronMap</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold">A</div>
+      <span class="text-sm text-zinc-400">admin</span>
+      <a href="login.html" class="text-xs text-zinc-600 hover:text-zinc-400 ml-2">退出</a>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="max-w-3xl mx-auto px-6 py-10">
+
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold">我的文档</h1>
+        <p class="text-sm text-zinc-500 mt-1">共 3 份文档，2 份已完成分析</p>
+      </div>
+      <a href="upload.html"
+        class="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+        <span class="text-base leading-none">+</span> 上传新文档
+      </a>
+    </div>
+
+    <div class="space-y-3">
+
+      <!-- Doc 1 — complete -->
+      <div class="bg-[#151729] border border-[#2a2f58] rounded-xl p-5 flex items-center gap-4">
+        <div class="w-10 h-12 bg-[#1c2048] rounded-lg flex items-center justify-center flex-shrink-0 border border-[#2a2f58]">
+          <svg class="w-5 h-6 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+            <path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-white truncate">操作系统教材.pdf</p>
+          <div class="flex items-center gap-3 mt-1">
+            <span class="text-xs text-zinc-500">2026-06-20</span>
+            <span class="text-xs text-zinc-500">·</span>
+            <span class="text-xs text-violet-400">23 个节点</span>
+            <span class="text-xs text-zinc-500">·</span>
+            <span class="text-xs text-zinc-400">18 条关系</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <a href="graph.html"
+            class="text-sm bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-lg transition-colors">
+            查看图谱
+          </a>
+          <button class="text-zinc-600 hover:text-red-400 px-2 py-1.5 transition-colors text-sm">删除</button>
+        </div>
+      </div>
+
+      <!-- Doc 2 — complete -->
+      <div class="bg-[#151729] border border-[#2a2f58] rounded-xl p-5 flex items-center gap-4">
+        <div class="w-10 h-12 bg-[#1c2048] rounded-lg flex items-center justify-center flex-shrink-0 border border-[#2a2f58]">
+          <svg class="w-5 h-6 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+            <path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-white truncate">深度学习基础.pdf</p>
+          <div class="flex items-center gap-3 mt-1">
+            <span class="text-xs text-zinc-500">2026-06-18</span>
+            <span class="text-xs text-zinc-500">·</span>
+            <span class="text-xs text-violet-400">11 个节点</span>
+            <span class="text-xs text-zinc-500">·</span>
+            <span class="text-xs text-zinc-400">9 条关系</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <a href="graph.html"
+            class="text-sm bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-lg transition-colors">
+            查看图谱
+          </a>
+          <button class="text-zinc-600 hover:text-red-400 px-2 py-1.5 transition-colors text-sm">删除</button>
+        </div>
+      </div>
+
+      <!-- Doc 3 — processing -->
+      <div class="bg-[#151729] border border-[#2a2f58] rounded-xl p-5 flex items-center gap-4">
+        <div class="w-10 h-12 bg-[#1c2048] rounded-lg flex items-center justify-center flex-shrink-0 border border-[#2a2f58]">
+          <svg class="w-5 h-6 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+            <path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-white truncate">系统设计面试精讲.pdf</p>
+          <div class="flex items-center gap-2 mt-2">
+            <div class="flex-1 bg-[#0d0f1f] rounded-full h-1.5">
+              <div class="bg-violet-500 h-1.5 rounded-full" style="width:72%"></div>
+            </div>
+            <span class="text-xs text-zinc-400 flex-shrink-0">AI 分析中 72%</span>
+          </div>
+        </div>
+        <div class="flex-shrink-0">
+          <a href="processing.html"
+            class="text-sm text-zinc-500 hover:text-zinc-300 px-3 py-1.5 border border-[#2a2f58] rounded-lg transition-colors">
+            查看进度
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty state hint -->
+    <p class="text-center text-xs text-zinc-700 mt-10">[ 低保真原型 · 数据为 Mock ]</p>
+  </main>
+
+</body>
+</html>
