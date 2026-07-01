@@ -4,16 +4,14 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id
   email     String   @unique
-  name      String?
-  password  String?
+  username  String?
+  bio       String?
   createdAt DateTime @default(now())
 
   documents    Document[]
@@ -21,27 +19,26 @@ model User {
 }
 
 model Document {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  fileUrl   String
-  fileType  String   @default("pdf")
-  pageCount Int?
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  userId          String
+  title           String
+  fileUrl         String
+  status          String   @default("PENDING")
+  extractProgress Int      @default(0)
+  createdAt       DateTime @default(now())
 
   user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   nodes KnowledgeNode[]
 }
 
 model KnowledgeNode {
-  id         String   @id @default(cuid())
-  userId     String
-  documentId String
-  title      String
-  summary    String
-  content    String   @db.Text
-  pageNumber Int?
-  createdAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  documentId    String
+  title         String
+  summary       String
+  level         String   @default("planet")
+  sourceHeading String?
+  createdAt     DateTime @default(now())
 
   document  Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
   edgesFrom KnowledgeEdge[] @relation("EdgeFrom")
@@ -53,7 +50,7 @@ model KnowledgeEdge {
   fromNodeId   String
   toNodeId     String
   relationType String   @default("related")
-  strength     Float    @default(0.5)
+  weight       Float    @default(0.5)
   createdAt    DateTime @default(now())
 
   fromNode KnowledgeNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)

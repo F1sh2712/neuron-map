@@ -1,180 +1,129 @@
+<div align="right">
+  <a href="README.zh.md"><img src="https://img.shields.io/badge/语言-中文-red?style=flat-square&logo=googletranslate&logoColor=white" alt="中文"/></a>
+  &nbsp;
+  <img src="https://img.shields.io/badge/Language-English-blue?style=flat-square" alt="English (current)"/>
+</div>
+
 <div align="center">
   <img src="public/icon.svg" alt="NeuronMap Logo" width="108" height="108" style="border-radius:24px"/>
-  <h1>NeuronMap</h1>
-  <p>炼知 · 自筑知识谱系</p>
-  <p><sub>上传文档，AI 自动提取知识节点，构建你的专属知识技能树</sub></p>
 
-  ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
-  ![React](https://img.shields.io/badge/React-19-61dafb?logo=react)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript)
-  ![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06b6d4?logo=tailwindcss)
-  ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase)
-  ![Prisma](https://img.shields.io/badge/Prisma-v7-2d3748?logo=prisma)
-  ![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)
+  <h1>NeuronMap</h1>
+
+  <p><strong>Turn your Markdown notes into a living knowledge universe — powered by Claude AI</strong></p>
+
+  <p><sub>炼知 · 上传笔记，AI 自动提取知识节点，构建你的专属知识宇宙</sub></p>
+
+  <p>
+    <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js"/></a>
+    <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19-61dafb?logo=react" alt="React"/></a>
+    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript" alt="TypeScript"/></a>
+    <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind-v4-06b6d4?logo=tailwindcss" alt="Tailwind"/></a>
+    <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase" alt="Supabase"/></a>
+    <a href="https://www.prisma.io/"><img src="https://img.shields.io/badge/Prisma-v7-2d3748?logo=prisma" alt="Prisma"/></a>
+    <a href="https://docs.anthropic.com/"><img src="https://img.shields.io/badge/Claude_AI-Sonnet-cc785c?logo=anthropic" alt="Claude AI"/></a>
+    <a href="https://github.com/pgvector/pgvector"><img src="https://img.shields.io/badge/pgvector-Vector_Search-3ecf8e?logo=supabase" alt="pgvector"/></a>
+    <a href="https://vercel.com/"><img src="https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel" alt="Vercel"/></a>
+  </p>
 </div>
 
 ---
 
-## 项目简介
+## What It Does
 
-NeuronMap 是一个 AI 驱动的知识图谱工具。上传 PDF 文档后，Claude 自动提取核心概念（知识节点）和它们之间的关系，渲染成游戏技能树风格的交互图谱，并支持与你的知识库进行 AI 对话。
+NeuronMap takes a Markdown file you upload and uses Claude AI to extract the key concepts and relationships inside it. Those concepts are then rendered as an **animated cosmic graph** — stars, planets, and asteroids orbiting each other — so you can *see* the structure of your own knowledge at a glance. You can also chat with your knowledge base using semantic search powered by pgvector.
 
-**核心功能（规划中）：**
-- 上传 PDF → AI 自动解析，生成知识节点和关系边
-- 可视化知识图谱（节点 + 连线，像游戏技能树一样）
-- 基于知识库的 AI 问答（引用具体节点）
-- 多文档管理，知识跨文档关联
+**The knowledge universe metaphor:**
 
----
-
-## 技术栈
-
-| 层次 | 技术 | 版本 |
+| Celestial body | Represents | Behaviour |
 |---|---|---|
-| 框架 | [Next.js](https://nextjs.org/) App Router（全栈） | 16.2.9 |
-| 前端 | React + TypeScript + Tailwind CSS | 19 / 5 / v4 |
-| 数据库 | PostgreSQL via [Supabase](https://supabase.com/)（云托管） | — |
-| ORM | [Prisma](https://www.prisma.io/) | 7.8.0 |
-| 认证 | [NextAuth](https://authjs.dev/) | v5 beta |
-| AI | [Anthropic Claude API](https://docs.anthropic.com/)（`claude-sonnet-4-6`） | SDK 0.104 |
-| 文件存储 | Supabase Storage | — |
-| 部署 | [Vercel](https://vercel.com/)（免费 Hobby 套餐） | — |
+| ⭐ Star | Top-level concept (chapter heading) | Anchored, glows brightest |
+| 🪐 Planet | Second-level concept | Orbits its star |
+| ☄️ Asteroid | Detail, definition, example | Orbits its planet |
+
+Click any body to open a details panel. Drag to pin it outside its orbit.
 
 ---
 
-## 核心技术说明
+## Screenshots
 
-### Prisma — 数据库翻译官
+> _Auth flow is live. Graph renderer is in active development — screenshots will be added here._
 
-Prisma 是一个 ORM（对象关系映射），让你用 TypeScript 操作数据库，而不需要手写 SQL。
-
-**它做了三件事：**
-
-**1. Schema 定义（`prisma/schema.prisma`）**
-在这里声明你有哪些数据表和字段，像写配置文件一样：
-```prisma
-model User {
-  id    String @id @default(cuid())
-  email String @unique
-  name  String?
-}
-```
-
-**2. 自动翻译成 SQL**
-你写 TypeScript，Prisma 帮你翻译成数据库查询：
-```ts
-// 你写的
-const user = await db.user.findUnique({ where: { email: 'admin' } })
-
-// Prisma 翻译成
-// SELECT * FROM "User" WHERE email = 'admin' LIMIT 1
-```
-
-**3. 类型安全（`src/generated/prisma/`）**
-Prisma 根据你的 Schema 自动生成 TypeScript 类型。`user.email`、`user.name` 都有类型提示，字段名写错会在编译时报错，而不是运行时崩溃。
-
-**本项目 Prisma v7 的特别说明：**
-Prisma v7 使用 WASM 查询编译器，不再内置原生驱动。初始化时必须传入 driver adapter：
-```ts
-import { PrismaPg } from '@prisma/adapter-pg'
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
-const db = new PrismaClient({ adapter })
-```
+| Registration | Password Setup | Dashboard |
+|---|---|---|
+| ![register](docs/screenshots/register.png) | ![setup](docs/screenshots/setup.png) | ![dashboard](docs/screenshots/dashboard.png) |
 
 ---
 
-## 当前脚手架状态
+## What's Built
 
-### ✅ 已搭建完成
+### ✅ Authentication (complete)
 
-#### 项目配置
-- **Next.js 16 App Router** — `next.config.ts`，Turbopack 已启用
-- **TypeScript 严格模式** — `tsconfig.json`，路径别名 `@/*` → `src/*`
-- **Tailwind CSS v4** — `postcss.config.mjs`，全局样式 `src/app/globals.css`，使用 Geist 字体
-- **ESLint** — `eslint.config.mjs`，集成 Next.js + TypeScript 规则，自动忽略 `src/generated/`
+- **Multi-step registration:** email → 6-digit OTP verification → password setup (with strength meter: weak / medium / strong, medium required) → username & bio profile
+- **Login:** email + password via Supabase Auth
+- **Session management:** cookie-based sessions via `@supabase/ssr`, refreshed on every request through `src/proxy.ts`
+- **Route protection:** unauthenticated users are redirected to `/login`; logged-in users skip auth pages straight to `/dashboard`
 
-#### 数据库
-- **Prisma v7** — `prisma/schema.prisma` 已定义完整数据模型（见下方），`prisma.config.ts` 配置双 URL（runtime pooler + direct URL）
-- **Prisma 客户端** — 已生成至 `src/generated/prisma/`（wasm 编译器版本）
-- **数据库单例** — `src/lib/db.ts`，防止 Next.js 开发热重载时重复创建连接
+### ✅ Database & Schema (complete)
 
-#### 依赖安装完成
-```
-next-auth@5.0.0-beta.31    — 认证框架
-@supabase/supabase-js       — Supabase 客户端
-@anthropic-ai/sdk           — Claude API 客户端
-@prisma/client              — Prisma ORM
-tailwindcss@v4              — CSS 框架
-```
+Full Prisma schema pushed to Supabase — `User`, `Document`, `KnowledgeNode` (with `level` field: star / planet / asteroid), `KnowledgeEdge`, `ChatSession`, `ChatMessage`. Vector column (`embedding`) ready for pgvector once AI extraction is wired up.
 
-#### 环境变量
-- `.env` — Prisma 专用（DATABASE_URL + DIRECT_URL）
-- `.env.local` — 完整配置（Supabase + DB + Claude + NextAuth）
-- 两个文件均已通过 `.gitignore`（`.env*` 规则）排除，不会提交
+### 🔧 In Progress
 
-#### 已验证
-- `npm run build` ✅ 编译通过
-- `npm run lint` ✅ 无 ESLint 错误
-- TypeScript 类型检查 ✅ 通过
-- Supabase 数据库连接 ✅ 可达
+- Markdown file upload → Supabase Storage
+- Claude AI knowledge extraction → node + edge records
+- Custom Canvas cosmic graph renderer (orbital animation via `requestAnimationFrame`)
+- pgvector semantic search + AI chat
 
 ---
 
-### 🚧 待开发（功能层）
+## Architecture & Key Decisions
 
-```
-src/
-  app/
-    (auth)/           ← 登录 / 注册页面
-    (dashboard)/      ← 主应用页面（文档列表、图谱视图、聊天）
-    api/
-      auth/           ← NextAuth 路由
-      documents/      ← 文件上传 API
-      nodes/          ← 知识节点 CRUD API
-      chat/           ← AI 聊天 API（流式）
-  components/         ← 可复用 React 组件（图谱渲染、节点卡片等）
-  lib/
-    auth.ts           ← NextAuth 配置
-    supabase.ts       ← Supabase 客户端（上传 / 存储）
-    prompts/          ← Claude 系统提示词
-  types/              ← TypeScript 类型定义
-```
+These are the deliberate trade-offs made during design — not defaults.
 
----
+### 1. Supabase Auth over NextAuth
 
-## 数据模型
+The project already uses Supabase for PostgreSQL and file storage. Adding NextAuth would mean a second session system, extra environment variables, and a separate user table. Switching to Supabase Auth consolidates everything — auth state, database records, and file storage — under one provider, one SDK, and one dashboard.
 
-定义于 `prisma/schema.prisma`，已推送至 Supabase：
+### 2. Custom Canvas renderer over `react-force-graph`
 
-```
-User
-├── id, email, name, password, createdAt
-│
-├── Document[]              上传的 PDF 文件
-│   ├── id, title, fileUrl, fileType, pageCount, createdAt
-│   └── KnowledgeNode[]     AI 从文档中提取的知识节点
-│       ├── id, title, summary, content, pageNumber, createdAt
-│       ├── edgesFrom[]     → KnowledgeEdge（该节点作为起点的边）
-│       └── edgesTo[]       → KnowledgeEdge（该节点作为终点的边）
-│
-└── ChatSession[]           AI 对话会话
-    ├── id, title, createdAt
-    └── ChatMessage[]       对话消息
-        ├── id, role, content, createdAt
-        └── referencedNodeIds[]   引用的知识节点 ID 列表
+`react-force-graph` produces force-directed layouts where nodes repel each other until they find equilibrium. That's useful for general graphs but cannot model **orbital motion** — planets following circular paths around a fixed star at varying speeds. A custom `requestAnimationFrame` loop gives full control over `orbitRadius`, `orbitSpeed`, and `angle` per node, which is what the cosmic metaphor requires.
 
-KnowledgeEdge
-├── id, fromNodeId, toNodeId
-├── relationType (默认 "related")
-└── strength (0.0 ~ 1.0，默认 0.5)
-```
+### 3. pgvector inside Supabase over a dedicated vector DB
+
+Adding a separate vector database (Pinecone, Weaviate, Qdrant) would mean another service to configure, another API key, and another billing account. Supabase ships with the `pgvector` extension built in — enabling it is a single SQL line. The knowledge embeddings live in the same database as everything else, which keeps queries simple (no cross-service joins) and the free tier sufficient for Phase 1.
+
+### 4. Prisma v7 with explicit driver adapter
+
+Prisma v7 moved to a WASM query compiler and removed the bundled native engine. `new PrismaClient()` with no arguments throws at runtime. The decision to use `@prisma/adapter-pg` explicitly is a requirement, not an option — but it also makes the database connection layer visible and testable rather than implicit.
+
+### 5. Next.js App Router full-stack over separate frontend/backend
+
+A separate Express or FastAPI backend would require CORS configuration, two deployment targets, and context-switching between two codebases. Next.js App Router collocates API route handlers next to the pages that call them. A single `vercel.json`-free deploy covers everything. The tradeoff is that long-running AI jobs need streaming (`ReadableStream`) rather than waiting for a response — which is implemented for the chat endpoint.
+
+### 6. OTP code over magic links for email verification
+
+Supabase's `signInWithOtp` sends a **magic link** when `emailRedirectTo` is provided, or a **6-digit code** when it isn't. Magic links embed the host URL — `http://localhost:3000/auth/callback` — which is unreachable when a user opens their email on a different device or network. Dropping `emailRedirectTo` and using `verifyOtp` on the client avoids this entirely. The user never leaves the page.
 
 ---
 
-## 本地运行
+## Tech Stack
 
-### 1. 克隆并安装依赖
+| Layer | Choice | Why |
+|---|---|---|
+| Framework | Next.js 16 App Router | Full-stack in one repo, single Vercel deploy |
+| UI | React 19 + Tailwind CSS v4 | Server Components by default, minimal CSS overhead |
+| Database | PostgreSQL via Supabase | Hosted, free tier, ships with pgvector and Storage |
+| ORM | Prisma v7 | Type-safe queries, schema-as-code |
+| Auth | Supabase Auth (`@supabase/ssr`) | Already using Supabase — avoids a second auth system |
+| AI | Anthropic Claude API (`claude-sonnet-4-6`) | Best-in-class for structured extraction from prose |
+| Vector search | Supabase pgvector | No separate vector DB needed |
+| File storage | Supabase Storage | Markdown uploads, same project as DB and auth |
+| Graph renderer | Custom Canvas + `requestAnimationFrame` | Orbital animation not possible with force-directed libs |
+| Deploy | Vercel | Zero-config for Next.js, free Hobby tier |
+
+---
+
+## Local Setup
 
 ```bash
 git clone https://github.com/F1sh2712/neuron-map.git
@@ -182,127 +131,45 @@ cd neuron-map
 npm install
 ```
 
-### 2. 配置环境变量
-
-创建 `.env.local`（不提交此文件）：
+Create `.env.local`:
 
 ```env
-# Supabase — Project Settings → API
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-
-# 数据库 — Project Settings → Database → Connection string
-# Transaction pooler（端口 6543，运行时用）
-DATABASE_URL=postgresql://postgres.your-id:password@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
-# Session pooler（端口 5432，prisma db push 用）
-DIRECT_URL=postgresql://postgres.your-id:password@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
-
-# Claude API — console.anthropic.com
-ANTHROPIC_API_KEY=sk-ant-your-key
-
-# NextAuth — 用 openssl rand -base64 32 生成
-NEXTAUTH_SECRET=your-random-secret
-NEXTAUTH_URL=http://localhost:3000
+DATABASE_URL=postgresql://...pooler.supabase.com:6543/postgres?pgbouncer=true
+DIRECT_URL=postgresql://...pooler.supabase.com:5432/postgres
+ANTHROPIC_API_KEY=sk-ant-...
 ```
-
-同时创建 `.env`（Prisma CLI 专用）：
-
-```env
-DATABASE_URL=（同上，Transaction pooler URL）
-DIRECT_URL=（同上，Session pooler URL）
-```
-
-### 3. 初始化数据库
 
 ```bash
-npx prisma db push      # 将 schema 推送到 Supabase
-npx prisma generate     # 重新生成 Prisma 客户端（已完成，一般不需要重跑）
+npx prisma db push      # push schema to Supabase
+npm run dev             # http://localhost:3000
 ```
 
-验证连接：
+---
+
+## Commands
 
 ```bash
-npx prisma studio       # 打开图形界面，能看到 5 张表说明成功
-```
+npm run dev           # dev server (Turbopack)
+npm run build         # production build
+npm run lint          # ESLint
 
-### 4. 启动开发服务器
-
-```bash
-npm run dev
-```
-
-打开 [http://localhost:3000](http://localhost:3000)
-
----
-
-## 常用命令
-
-```bash
-npm run dev           # 启动开发服务器（Turbopack）
-npm run build         # 生产构建（PR 前必须通过）
-npm run lint          # ESLint 检查
-
-npx prisma db push    # 同步 Schema 变更到 Supabase
-npx prisma generate   # 重新生成 Prisma 客户端
-npx prisma studio     # 可视化数据库管理（开发用）
+npx prisma db push    # sync schema to Supabase
+npx prisma generate   # regenerate Prisma client
+npx prisma studio     # visual DB browser (dev only)
 ```
 
 ---
 
-## 部署到 Vercel
+## Security Notes
 
-1. 将本仓库连接到 [Vercel](https://vercel.com/)（Import Git Repository）
-2. 在 Vercel → Project → **Settings → Environment Variables** 添加所有 `.env.local` 变量
-3. 将 `NEXTAUTH_URL` 改为 Vercel 分配的域名（如 `https://neuron-map.vercel.app`）
-4. Push 到 `main` 分支自动触发部署
-
----
-
-## 项目结构
-
-```
-neuron-map/
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx        # 根布局（Geist 字体、全局样式）
-│   │   ├── page.tsx          # 首页（开发中）
-│   │   └── globals.css       # Tailwind 全局样式
-│   ├── lib/
-│   │   └── db.ts             # Prisma 客户端单例
-│   └── generated/
-│       └── prisma/           # 自动生成，勿手动编辑（已 gitignore）
-├── prisma/
-│   └── schema.prisma         # 数据库 Schema（唯一来源）
-├── prisma.config.ts          # Prisma v7 配置（datasource URL）
-├── public/
-│   └── icon.svg              # 项目图标
-├── next.config.ts            # Next.js 配置
-├── tsconfig.json             # TypeScript 配置
-├── eslint.config.mjs         # ESLint 配置
-├── postcss.config.mjs        # Tailwind CSS 配置
-├── CLAUDE.md                 # AI 编码约束
-├── AGENTS.md                 # 培训流程和 subagent 说明
-└── docs/                     # 详细规格文档
-```
+- `ANTHROPIC_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are server-only — never passed to the client
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` is intentionally public (Supabase's row-level security enforces access)
+- All AI calls go through `src/app/api/` server routes, not client-side code
 
 ---
 
-## 开发文档
-
-| 文档 | 内容 |
-|---|---|
-| [01-project-brief.md](01-project-brief.md) | 项目背景、目标用户、范围 |
-| [02-prd.md](02-prd.md) | 产品需求、用户流程、验收标准 |
-| [03-runbook.md](03-runbook.md) | 安装、运行、测试说明 |
-| [04-ai-usage.md](04-ai-usage.md) | AI 使用记录 |
-| [05-submission.md](05-submission.md) | 提交说明 |
-| [06-review-checklist.md](06-review-checklist.md) | 提交前自查清单 |
-
 ---
 
-## 安全提示
-
-- 不要提交 `.env`、`.env.local`（`.gitignore` 已用 `.env*` 排除）
-- `src/generated/prisma/` 自动生成，已排除，不要手动提交
-- 所有 AI 调用只在服务端 API routes 执行，`ANTHROPIC_API_KEY` 不暴露给客户端
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` 是公开 key，暴露给客户端是安全的
+> 阅读中文版：[README.zh.md](README.zh.md)

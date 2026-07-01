@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
-  const [account, setAccount] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,21 +17,18 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
 
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ account, password }),
-    })
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-    const data = await res.json()
     setLoading(false)
 
-    if (!res.ok) {
-      setError(data.error ?? '登录失败')
+    if (error) {
+      setError('邮箱或密码错误')
       return
     }
 
-    router.push(`/welcome?name=${encodeURIComponent(data.name)}`)
+    router.push('/dashboard')
+    router.refresh()
   }
 
   return (
@@ -45,14 +44,14 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">账号</label>
+            <label className="block text-sm font-medium text-zinc-400 mb-1.5">邮箱</label>
             <input
-              type="text"
-              value={account}
-              onChange={e => setAccount(e.target.value)}
-              placeholder="admin"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@example.com"
               required
-              autoComplete="username"
+              autoComplete="email"
               className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
             />
           </div>
@@ -81,9 +80,16 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full mt-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
           >
-            {loading ? '验证中...' : '登录'}
+            {loading ? '登录中...' : '登录'}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-zinc-500">
+          还没有账号？{' '}
+          <Link href="/register" className="text-violet-400 hover:text-violet-300 transition-colors">
+            立即注册
+          </Link>
+        </p>
       </div>
     </div>
   )

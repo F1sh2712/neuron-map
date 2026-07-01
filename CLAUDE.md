@@ -6,7 +6,7 @@ All training workflow rules are in `AGENTS.md` — read it first. This file cove
 
 ## Project: NeuronMap
 
-An AI-powered knowledge graph tool. Users upload documents (PDF); the app uses Claude to extract knowledge nodes and relationships, renders them as an interactive graph, and lets users chat with their knowledge base.
+An AI-powered knowledge graph tool. Users upload Markdown (.md) files; the app uses Claude to extract knowledge nodes and relationships, renders them as a **cosmic universe graph** (stars / planets / asteroids with orbital animation), and lets users chat with their knowledge base via semantic search (pgvector).
 
 ---
 
@@ -18,9 +18,11 @@ An AI-powered knowledge graph tool. Users upload documents (PDF); the app uses C
 | UI | React 19 + Tailwind CSS v4 |
 | Database | PostgreSQL via Supabase (hosted) |
 | ORM | Prisma v7 — client generated at `src/generated/prisma/` |
-| Auth | NextAuth v5 beta |
+| Auth | Supabase Auth (`@supabase/ssr`) |
 | AI | Anthropic Claude API (`@anthropic-ai/sdk`) |
-| File Storage | Supabase Storage |
+| Vector DB | Supabase pgvector — enabled via `CREATE EXTENSION vector` in Supabase SQL editor |
+| File Storage | Supabase Storage (Markdown files, bucket: `documents`) |
+| Graph Renderer | Custom Canvas + `requestAnimationFrame` — do NOT use react-force-graph for cosmic layout |
 | Deploy | Vercel (free Hobby tier) |
 
 ---
@@ -36,8 +38,9 @@ src/
   components/           — shared React components
   lib/                  — server-side utilities
     db.ts               — Prisma client singleton (already exists)
-    supabase.ts         — Supabase client helpers
-    auth.ts             — NextAuth config
+    supabase/
+      client.ts         — browser Supabase client (createBrowserClient)
+      server.ts         — server Supabase client (createServerClient + cookies)
     prompts/            — Claude system prompts as TS constants
   types/                — TypeScript type definitions
 prisma/
@@ -67,10 +70,13 @@ Keep all code inside `src/`. Do not create `src/frontend/` or `src/backend/` sub
 
 ## Authentication
 
-- NextAuth v5 beta is installed. Config goes in `src/lib/auth.ts`.
-- Use the `auth()` helper from NextAuth for server components and API routes.
-- Protected routes go under `src/app/(dashboard)/` with a layout that checks session.
-- `NEXTAUTH_SECRET` must be set in `.env.local` and in Vercel env vars for production.
+- **Supabase Auth** handles email OTP verification, password management, and sessions.
+- Browser client: `import { createClient } from '@/lib/supabase/client'` (use in `'use client'` components).
+- Server client: `import { createClient } from '@/lib/supabase/server'` (use in Server Components and API routes).
+- Get current user server-side: `const { data: { user } } = await supabase.auth.getUser()`.
+- Protected routes go under `src/app/(dashboard)/` — the layout calls `createClient()` and redirects to `/login` if no user.
+- `src/proxy.ts` refreshes the auth session cookie on every request (Next.js 16 renamed `middleware.ts` → `proxy.ts`, export function name must be `proxy`).
+- Registration flow: email → OTP (`signInWithOtp`) → verify (`verifyOtp`) → set password (`updateUser`) → create Prisma `User` profile via `POST /api/auth/profile`.
 
 ---
 
@@ -90,6 +96,8 @@ Keep all code inside `src/`. Do not create `src/frontend/` or `src/backend/` sub
 - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are safe to expose to the client.
 - For server-side calls needing elevated access, use `SUPABASE_SERVICE_ROLE_KEY` — never expose it to the client.
 - Uploaded files go to a Supabase Storage bucket named `documents`. Store the public URL in `Document.fileUrl`.
+- **Phase 1 accepts Markdown (.md) files only** — PDF support is deferred to Phase 2.
+- pgvector stores node embeddings in `KnowledgeNode.embedding` (vector column). Enable with: `CREATE EXTENSION IF NOT EXISTS vector;` in Supabase SQL editor before running `prisma db push`.
 
 ---
 
@@ -103,11 +111,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 DATABASE_URL=           # transaction pooler URL (port 6543, pgbouncer=true)
 DIRECT_URL=             # session pooler URL (port 5432)
 ANTHROPIC_API_KEY=
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=http://localhost:3000
 ```
 
-For production, set all of the above in Vercel → Project → Settings → Environment Variables. Set `NEXTAUTH_URL` to the actual deployed domain.
+For production, set all of the above in Vercel → Project → Settings → Environment Variables.
 
 ---
 
@@ -135,12 +141,20 @@ For production, set all of the above in Vercel → Project → Settings → Envi
 
 | Model | Purpose |
 |---|---|
-| `User` | Auth — email + password, linked to all data |
-| `Document` | Uploaded PDF metadata + Supabase file URL |
-| `KnowledgeNode` | AI-extracted concept from a document page |
+| `User` | Profile — id matches Supabase `auth.users` UUID; stores username, bio |
+| `Document` | Uploaded Markdown file metadata + Supabase file URL + extraction status |
+| `KnowledgeNode` | AI-extracted concept; `level` field = `star` / `planet` / `asteroid`; `embedding` = pgvector column |
 | `KnowledgeEdge` | Relationship between two nodes (typed + weighted) |
 | `ChatSession` | A conversation thread scoped to a user |
 | `ChatMessage` | Individual message with optional node references |
+
+## Cosmic Graph Rules
+
+- **Three tiers:** `star` (top-level concept, anchored), `planet` (orbits its star), `asteroid` (orbits its planet).
+- **Level assignment:** determined by Claude during extraction, or by Markdown heading depth (# → star, ## → planet, ### → asteroid).
+- **Renderer:** Custom Canvas (`src/components/cosmos/`). Do NOT use `react-force-graph` — it is force-directed only and cannot model orbital motion.
+- **Animation:** `requestAnimationFrame` loop. Each planet/asteroid has `orbitRadius`, `orbitSpeed`, `angle` properties. Stars do not move.
+- **Token budget:** Developer's own `ANTHROPIC_API_KEY` funds all Claude calls in Phase 1. No per-user quotas needed yet.
 
 ---
 
