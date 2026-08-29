@@ -1,73 +1,96 @@
-# 03 Runbook / 运行与复现说明
+# 03 Runbook - NeuronMap
 
-培训第 3 步：让 reviewer 可以在本地复现项目，包括环境、安装、运行、测试和手动验证步骤。
+This runbook explains how a reviewer can install, run, and verify the project locally.
 
-## Environment / 环境
+## Environment
 
-需要的环境：
+- OS: Windows, macOS, or Linux.
+- Node.js: 20+ recommended.
+- Package manager: npm.
+- Database: Supabase PostgreSQL.
+- Storage: Supabase Storage bucket named `documents`.
+- AI provider: Anthropic Claude API.
 
-- OS:
-- Node.js version:
-- Java version:
-- Python version:
-- Database:
-- Other tools:
+## Required Environment Variables
 
-## Setup / 安装和初始化
+Create `.env.local` in the project root. Do not commit this file.
 
-安装依赖或初始化项目的步骤：
-
-```bash
-# example
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+DATABASE_URL=postgresql://...
+DIRECT_URL=postgresql://...
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-## Run Frontend / 启动前端
-
-如果有前端，写清楚启动方式：
+## Setup
 
 ```bash
-# example
+npm install
+npx prisma generate
+npx prisma db push
 ```
 
-## Run Backend / 启动后端
+If the database already exists, confirm that the schema in `prisma/schema.prisma` matches the Supabase project before running `db push`.
 
-如果有后端，写清楚启动方式：
+## Run App
 
 ```bash
-# example
+npm run dev
 ```
 
-## Run Tests / 运行测试
+Open:
 
-写清楚测试或验证方式：
+```text
+http://localhost:3000
+```
+
+The root page redirects to `/login`.
+
+## Run Verification
 
 ```bash
-# example
+npx tsc --noEmit
+npm run lint
+npm run build
 ```
 
-## Manual Verification / 手动验证
+Expected result:
 
-如果暂时没有自动化测试，写清楚手动验证步骤：
+- TypeScript completes without errors.
+- ESLint has no errors. Warnings should be recorded if present.
+- Next.js production build completes successfully.
 
-1. 
-2. 
-3. 
+## Manual Verification
 
-## Deploy Or Preview / 部署或预览
+1. Start the dev server.
+2. Register a test account with a non-production email.
+3. Complete OTP verification and password setup.
+4. Confirm the app redirects to `/dashboard`.
+5. Open `/upload`.
+6. Upload a sample Markdown file once Markdown upload is implemented.
+7. Confirm a `Document` record is created.
+8. Confirm extraction creates `KnowledgeNode` and `KnowledgeEdge` records.
+9. Confirm status becomes `COMPLETED` or a clear `FAILED` error is shown.
 
-如果这是 Web 项目，写清楚是否有可访问的 demo / preview link：
+## Current Known Limitation
 
-- Demo URL：
-- 部署平台：
-- 部署分支：
-- 最近一次部署时间：
-- 如果不能部署，原因是什么：
-- reviewer 应该改用什么本地复现方式：
+The current upload prototype still accepts PDF. The Phase 1 target is Markdown-first, so the upload and extraction flow must be aligned before final submission.
 
-## Common Issues / 常见问题
+## Deploy Or Preview
 
-记录常见问题和解决方式：
+Current status:
 
-- 
+- Demo URL: not available yet.
+- Deployment platform target: Vercel.
+- Reason: the MVP is still being aligned around Markdown upload and extraction.
+- Reviewer should use local setup until a preview URL is provided.
 
-提交前，把实际运行和验证结果写到 `05-submission.md`，相关证据放到 `evidence/`。
+## Evidence
+
+Store verification artifacts in:
+
+- `evidence/logs/`
+- `evidence/screenshots/`
+
+Evidence should include command output, screenshots, or a short manual verification note.

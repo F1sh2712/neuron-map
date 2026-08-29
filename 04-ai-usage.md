@@ -1,31 +1,40 @@
-# 04 AI Usage Log / AI 使用记录
+# 04 AI Usage Log
 
-培训第 4 步：记录 AI 如何参与项目，以及哪些内容是自己理解、修改和验证过的。
+AI tools are allowed in this project, but every submitted change must be understood, reviewed, and verified by the student.
 
-使用 AI 没有问题，但提交者必须理解、运行、验证和修改最终结果。
+## Tools Used
 
-## Tools Used / 使用的工具
+- ChatGPT / Codex: project review, documentation rewrite, implementation guidance.
+- Claude / Cursor / Copilot: not recorded for this update.
 
-- ChatGPT / Codex / Claude / Cursor / Copilot / Other:
+## Usage Records
 
-## Usage Records / 使用记录
+### Record 1
 
-### Record 1 / 记录 1
+- Date: 2026-07-04
+- Tool: Codex
+- Task: Review the current project against `AGENTS.md` and the PRD.
+- Prompt summary: Analyze the whole project, identify issues, compare current implementation with PRD requirements, and suggest improvements.
+- AI output summary: Identified that the project builds successfully but the documentation, PRD, implementation direction, and evidence are not aligned. Recommended a Markdown-first MVP and treating PDF as a later adapter.
+- Adopted: Markdown-first project direction, clearer Phase 1 scope, issue prioritization, and verification checklist.
+- Modified by student: Pending.
+- Rejected: Treating the current PDF prototype as the final Phase 1 path.
+- Still unclear: Final choice of Markdown parser and whether extraction should be synchronous or queued.
 
-- 日期：
-- 工具：
-- 任务：
-- Prompt 摘要：
-- AI 输出摘要：
-- 我采纳了什么：
-- 我自己修改了什么：
-- 我没有采纳什么：
-- 我仍然不理解什么：
+### Record 2
 
-## Important Rule / 重要规则
+- Date: 2026-07-04
+- Tool: Codex
+- Task: Rewrite README and project process documents.
+- Prompt summary: Update README and documentation to describe project rules, goals, progress, and current limitations.
+- AI output summary: Rewrote the project brief, PRD, runbook, AI usage log, submission note, checklist, README, Chinese README, and verification evidence around the Markdown-first MVP.
+- Adopted: Documentation structure and current progress summary.
+- Modified by student: Pending.
+- Rejected: Overstating unfinished graph, chat, and pgvector features as complete.
+- Still unclear: None for documentation; implementation details remain open.
 
-不要提交自己完全不理解的 AI 生成代码。
+## Important Rules
 
-不要把 secret、真实用户数据、完整付费资料或敏感商业信息贴给 AI。
-
-提交 review 前，在 `05-submission.md` 中摘要说明本次 AI 使用情况。
+- Do not submit AI-generated code that you cannot explain.
+- Do not paste secrets, real student data, database credentials, or paid course material into AI tools.
+- If AI suggests code, run it locally and record evidence before submitting.

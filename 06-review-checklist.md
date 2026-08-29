@@ -1,46 +1,51 @@
-# 06 Review Checklist / 提交前自查
+# 06 Review Checklist
 
-培训第 6 步：提交 review 前先完成自查，确保 reviewer 可以快速理解、运行和验证。
+Use this before opening a PR.
 
-## Product / 产品
+## Product
 
-- [ ] `01-project-brief.md` 已填写。
-- [ ] `02-prd.md` 已填写。
-- [ ] 功能范围清楚。
-- [ ] Non-goals 清楚。
-- [ ] 验收标准清楚。
+- [x] `01-project-brief.md` describes the project goal.
+- [x] `02-prd.md` defines Phase 1 requirements.
+- [x] Scope and non-goals are clear.
+- [x] Acceptance criteria are listed.
+- [ ] Current implementation matches the Markdown-first PRD.
 
-## Engineering / 工程
+## Engineering
 
-- [ ] 代码放在约定目录中。
-- [ ] `03-runbook.md` 能说明如何运行。
-- [ ] 前后端接口有文档。
-- [ ] 数据结构或数据库设计有说明。
-- [ ] 没有提交无关文件。
-- [ ] 没有提交 secret、真实学生数据或数据库连接串。
+- [x] Code is under the expected project structure.
+- [x] Database schema exists in `prisma/schema.prisma`.
+- [x] Auth routes and API routes exist.
+- [ ] API docs are fully filled with request/response examples.
+- [ ] Markdown parser is implemented.
+- [ ] Status API is implemented.
+- [ ] Document list/result view is implemented.
+- [ ] No unrelated generated artifacts are included in PR.
+- [ ] No secrets or real user data are committed.
 
-## Verification / 验证
+## Verification
 
-- [ ] 有测试命令或手动验证步骤。
-- [ ] 已经运行过主要验证步骤。
-- [ ] 证据已放到 `evidence/` 或写在 PR description 中。
-- [ ] 已知问题已经说明。
+- [x] `npx tsc --noEmit` has been run.
+- [x] `npm run lint` has been run.
+- [x] `npm run build` has been run.
+- [ ] Manual Markdown upload test has been completed.
+- [ ] Extraction result has been verified in the database.
+- [ ] Screenshots or logs have been saved in `evidence/`.
+- [ ] Known issues are listed in `05-submission.md`.
 
-## Deploy / 部署
+## Deploy
 
-- [ ] 如果是 Web 项目，已提供 demo / preview link，或说明为什么暂时不能部署。
-- [ ] 如果需要 reviewer 本地运行，`03-runbook.md` 已写清楚完整步骤。
-- [ ] 部署环境没有使用生产 secret、真实学生数据或真实付费内容。
+- [ ] Demo / preview URL is provided, or the reason for no preview is documented.
+- [x] Local run instructions are documented in `03-runbook.md`.
+- [ ] Test account instructions are provided if a preview is deployed.
 
-## AI Usage / AI 使用
+## AI Usage
 
-- [ ] `04-ai-usage.md` 已记录。
-- [ ] AI 生成的代码已经读过。
-- [ ] AI 生成的代码已经运行或验证过。
-- [ ] 不理解的部分已经标出来。
+- [x] `04-ai-usage.md` records current AI usage.
+- [ ] Student has reviewed all AI-generated changes.
+- [ ] Student has marked any code they do not understand.
 
-## Submission / 提交
+## Submission
 
-- [ ] `05-submission.md` 已填写，或 PR description 已按模板填写。
-- [ ] PR / repo link 可以访问。
-- [ ] Reviewer 能在 5 分钟内理解这次提交要 review 什么。
+- [x] `05-submission.md` has a current submission summary.
+- [ ] PR description follows `.github/pull_request_template.md`.
+- [ ] Reviewer can understand the requested review scope within 5 minutes.

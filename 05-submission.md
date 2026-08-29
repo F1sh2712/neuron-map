@@ -1,88 +1,105 @@
-# 05 Submission / 提交说明
+# 05 Submission Notes
 
-培训第 5 步：每次提交 review 前，填写这个文件或在 PR description 中按这个结构说明。
+## Summary
 
-## Summary / 本次概述
+This submission realigns NeuronMap around a Markdown-first Phase 1 MVP. The current app has a working authentication foundation and an early upload/extraction prototype, but the final Phase 1 target is Markdown upload, chunked AI extraction, stored graph data, and reviewable evidence.
 
-这次提交完成了什么？
+## Tech Stack
 
-## Tech Stack / 使用的技术栈
+- Next.js 16 App Router
+- React 19
+- Tailwind CSS v4
+- Supabase Auth
+- Supabase PostgreSQL and Storage
+- Prisma 7 with `@prisma/adapter-pg`
+- Anthropic Claude API
 
-本次提交使用了哪些技术？
+## Important Files
 
-- 
+- `01-project-brief.md` - product goal and scope.
+- `02-prd.md` - Phase 1 requirements and acceptance criteria.
+- `03-runbook.md` - local setup and verification.
+- `04-ai-usage.md` - AI usage record.
+- `06-review-checklist.md` - submission checklist.
+- `prisma/schema.prisma` - database schema.
+- `src/app/(auth)/` - auth pages.
+- `src/app/api/` - API route handlers.
 
-## Important Files / 重要文件
-
-这次最重要的文件：
-
-- 
-
-## How To Run / 如何运行
-
-如何运行？
-
-```bash
-# command
-```
-
-## How To Test / 如何测试
-
-如何测试或验证？
+## How To Run
 
 ```bash
-# command
+npm install
+npx prisma generate
+npx prisma db push
+npm run dev
 ```
 
-## Evidence / 证据
+Open `http://localhost:3000`.
 
-截图、日志、运行输出或其他证据放在哪里？
+## How To Test
 
-- Demo / Preview URL：
-- 截图：
-- 日志：
-- 其他：
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
 
-## Completed / 已完成
+Manual checks:
 
-已经完成的内容：
+1. Register a test account.
+2. Complete OTP and password setup.
+3. Log in and reach `/dashboard`.
+4. Confirm protected routes redirect unauthenticated users to `/login`.
+5. After Markdown upload is implemented, upload a sample `.md` file and verify extraction output.
 
-- 
+## Evidence
 
-## Not Completed / 未完成
+- Logs: `evidence/logs/`
+- Screenshots: `evidence/screenshots/`
+- Demo / Preview URL: not available yet.
 
-还没有完成的内容：
+Current command verification is recorded in `evidence/logs/2026-07-04-verification.md`.
 
-- 
+## Completed
 
-## Known Issues / 已知问题
+- Auth pages and Supabase session flow.
+- Protected dashboard layout.
+- Prisma schema for core project entities.
+- Initial document creation API.
+- Initial Claude extraction API prototype.
+- Documentation rewritten around the current MVP direction.
 
-已知问题：
+## Not Completed
 
-- 
+- Markdown upload and parser.
+- Chunked extraction by Markdown heading.
+- Document status API.
+- Document list and result detail page.
+- Canvas graph renderer in the actual app.
+- Embeddings and AI chat.
+- Preview deployment.
 
-## AI Usage / AI 使用
+## Known Issues
 
-AI 在这次提交中做了什么？详细记录见 `04-ai-usage.md`。
+- Upload currently targets PDF, while the Phase 1 PRD now targets Markdown.
+- Extraction currently runs as a direct synchronous prototype.
+- README previously referenced screenshots that were not present.
+- ESLint currently reports warnings for `<img>` usage and one unused variable.
 
-## Retrospective / 复盘
+## AI Usage
 
-哪些地方困难或困惑？
+AI was used for project review and documentation rewriting. Details are recorded in `04-ai-usage.md`.
 
-- 
+## Retrospective
 
-下一步应该改进什么？
+The biggest issue was scope drift: the README, PRD, and implementation mixed Markdown, PDF, graph rendering, embeddings, and AI chat. The next improvement is to finish one reliable Markdown extraction path before adding richer visual or chat features.
 
-- 
+## Self Evaluation
 
-## Self Evaluation / 自评
+Current status: foundation is promising, but not yet ready as a final Phase 1 submission. It needs implementation alignment and evidence before PR review.
 
-对自己本次提交的整体评价：
+## Questions For Review
 
-## Questions For Review / 希望重点 Review 的问题
-
-希望 reviewer 特别看的问题：
-
-- 
-
-填写后，用 `06-review-checklist.md` 做最后自查。
+- Is Markdown-first the right Phase 1 scope?
+- Should PDF support be Phase 1.5 or Phase 2?
+- Is synchronous extraction acceptable for small Markdown files, or should the project introduce a job-style status flow immediately?

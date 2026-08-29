@@ -1,167 +1,136 @@
-<div align="right">
-  <img src="https://img.shields.io/badge/语言-中文-red?style=flat-square&logo=googletranslate&logoColor=white" alt="中文（当前）"/>
-  &nbsp;
-  <a href="README.md"><img src="https://img.shields.io/badge/Language-English-blue?style=flat-square" alt="English"/></a>
-</div>
+# NeuronMap
 
-<div align="center">
-  <img src="public/icon.svg" alt="NeuronMap Logo" width="108" height="108" style="border-radius:24px"/>
+NeuronMap 是一个 RBT AI Training Program 学生项目，用来探索 AI 如何帮助学生把学习笔记整理成知识图谱。
 
-  <h1>NeuronMap · 炼知</h1>
+Phase 1 MVP 采用 **Markdown-first** 路线：
 
-  <p><strong>上传 Markdown 笔记，AI 自动提取知识节点，构建你的专属知识宇宙</strong></p>
+```text
+上传 Markdown 笔记
+-> 按标题和章节解析
+-> 调用 Claude 提取知识节点和关系
+-> 存储 nodes / edges
+-> 在页面中展示提取结果
+```
 
-  <p>
-    <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js"/></a>
-    <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19-61dafb?logo=react" alt="React"/></a>
-    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript" alt="TypeScript"/></a>
-    <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind-v4-06b6d4?logo=tailwindcss" alt="Tailwind"/></a>
-    <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?logo=supabase" alt="Supabase"/></a>
-    <a href="https://www.prisma.io/"><img src="https://img.shields.io/badge/Prisma-v7-2d3748?logo=prisma" alt="Prisma"/></a>
-    <a href="https://docs.anthropic.com/"><img src="https://img.shields.io/badge/Claude_AI-Sonnet-cc785c?logo=anthropic" alt="Claude AI"/></a>
-    <a href="https://github.com/pgvector/pgvector"><img src="https://img.shields.io/badge/pgvector-向量搜索-3ecf8e?logo=supabase" alt="pgvector"/></a>
-    <a href="https://vercel.com/"><img src="https://img.shields.io/badge/部署-Vercel-000000?logo=vercel" alt="Vercel"/></a>
-  </p>
-</div>
+PDF 暂时不是 Phase 1 主线。后续可以把 PDF 作为输入适配器：先把 PDF 转成 Markdown，再复用同一套 Markdown 解析和 AI 提取流程。
 
----
+## 为什么先做 Markdown
 
-## 项目简介
+Markdown 比 PDF 更适合 Phase 1：
 
-NeuronMap 是一个 AI 驱动的知识图谱工具。上传 Markdown 笔记后，Claude 自动提取核心概念和关系，渲染成**宇宙风格的动态知识图谱**——恒星、行星、陨石按轨道运行——让你一眼看清自己知识的结构。同时支持基于 pgvector 语义搜索的 AI 问答。
+- 标题天然表示层级。
+- 文本解析更稳定。
+- 文件更小，AI token 成本更低。
+- 可以按章节拆分，降低超时风险。
+- 结果更容易 debug 和验收。
 
-**知识宇宙隐喻：**
+直接把完整 PDF 交给 Claude 解析适合快速 demo，但成本更高，也更难稳定复现。
 
-| 天体 | 代表 | 行为 |
-|---|---|---|
-| ⭐ 恒星 | 顶级概念（章节标题） | 静止锚定，最亮 |
-| 🪐 行星 | 二级知识点 | 绕恒星缓慢公转 |
-| ☄️ 陨石 | 细节定义、例子 | 绕行星快速公转 |
+## 当前进展
 
-点击任意天体打开详情面板；拖拽可将其钉住脱离轨道。
+已完成：
 
----
+- Next.js App Router 项目基础结构。
+- Supabase Auth 登录和注册流程。
+- OTP 验证、设置密码、完善资料。
+- `/dashboard` 登录保护。
+- Prisma 数据模型：用户、文档、知识节点、知识关系，以及后续 chat 占位表。
+- 初版文档创建 API。
+- 初版 Claude 提取 API 原型。
+- TypeScript、lint、production build 当前可以通过。
 
-## 截图
+部分完成：
 
-> _注册登录流程已上线。图谱渲染器开发中，截图将陆续更新。_
+- 上传页面已经存在，但目前接受 PDF，需要改成 Phase 1 的 Markdown 上传。
+- 提取 API 可以写入节点和关系，但还缺 Markdown 解析、分块处理、进度状态和重复数据保护。
 
-| 注册页 | 密码设置 | 控制台 |
-|---|---|---|
-| ![register](docs/screenshots/register.png) | ![setup](docs/screenshots/setup.png) | ![dashboard](docs/screenshots/dashboard.png) |
+未完成：
 
----
-
-## 已完成功能
-
-### ✅ 注册登录（已完成）
-
-- **多步骤注册：** 邮箱输入 → 6位OTP验证码 → 密码强度设置（弱/中/强，必须达到"中"）→ 用户名和个人简介
-- **登录：** 邮箱 + 密码，通过 Supabase Auth 验证
-- **会话管理：** 基于 Cookie 的会话，通过 `src/proxy.ts` 在每次请求时刷新
-- **路由保护：** 未登录用户跳转 `/login`；已登录用户跳过认证页面直达 `/dashboard`
-
-### ✅ 数据库与数据模型（已完成）
-
-完整 Prisma Schema 已推送至 Supabase：`User`、`Document`、`KnowledgeNode`（含 `level` 字段：star / planet / asteroid）、`KnowledgeEdge`、`ChatSession`、`ChatMessage`。向量列（`embedding`）已就绪，等待 AI 提取模块接入 pgvector。
-
-### 🔧 开发中
-
-- Markdown 文件上传 → Supabase Storage
-- Claude AI 知识节点提取 → 写入节点和关系记录
-- 自定义 Canvas 宇宙图谱渲染器（`requestAnimationFrame` 轨道动画）
-- pgvector 语义搜索 + AI 问答
-
----
-
-## 技术选型与决策
-
-这些是开发过程中的主动权衡，而非默认选择。
-
-### 1. Supabase Auth 替代 NextAuth
-
-项目已使用 Supabase 管理数据库和文件存储。引入 NextAuth 意味着第二套 Session 系统、额外的环境变量和独立的用户表。切换到 Supabase Auth 将认证状态、数据库记录和文件存储统一在一个 SDK 和一个 Dashboard 下。
-
-### 2. 自定义 Canvas 替代 `react-force-graph`
-
-`react-force-graph` 实现的是力导向布局——节点相互排斥直到找到平衡位置。这对通用图谱有效，但**无法实现轨道运动**。自定义 `requestAnimationFrame` 循环让每个节点拥有独立的 `orbitRadius`、`orbitSpeed` 和 `angle` 属性，这是宇宙隐喻所必需的。
-
-### 3. pgvector（Supabase 内置）替代独立向量数据库
-
-引入 Pinecone、Weaviate 或 Qdrant 意味着新的服务配置、新的 API Key 和新的账单。Supabase 内置 `pgvector` 扩展，一行 SQL 即可启用。知识节点的嵌入向量与其他数据存在同一个数据库中，查询简单，免费额度足够支撑 Phase 1。
-
-### 4. OTP 验证码替代魔法链接
-
-Supabase 的 `signInWithOtp` 传入 `emailRedirectTo` 参数时发送**魔法链接**，不传则发送**6位数字验证码**。魔法链接会将主机 URL（如 `http://localhost:3000/auth/callback`）嵌入邮件——用户在其他设备或网络上打开邮件时该链接不可访问。去掉 `emailRedirectTo`，改用客户端 `verifyOtp` 验证，用户无需离开页面。
-
-### 5. Next.js App Router 全栈替代前后端分离
-
-独立的 Express 或 FastAPI 后端需要配置 CORS、两个部署目标和在两个代码库之间切换上下文。Next.js App Router 将 API 路由处理器与调用它们的页面放在同一目录下，单次 Vercel 部署覆盖所有内容。
-
----
+- Markdown parser。
+- 文档列表和文档详情页。
+- 状态轮询 API。
+- Canvas 知识图谱渲染器。
+- embeddings 和 AI chat。
+- 线上 preview 部署。
 
 ## 技术栈
 
-| 层次 | 技术 | 选择原因 |
-|---|---|---|
-| 框架 | Next.js 16 App Router | 全栈一个仓库，单次 Vercel 部署 |
-| 前端 | React 19 + Tailwind CSS v4 | Server Components 默认，CSS 开销极低 |
-| 数据库 | PostgreSQL via Supabase | 托管、免费额度、内置 pgvector 和 Storage |
-| ORM | Prisma v7 | 类型安全查询，Schema 即代码 |
-| 认证 | Supabase Auth (`@supabase/ssr`) | 已用 Supabase，避免引入第二套认证 |
-| AI | Anthropic Claude API (`claude-sonnet-4-6`) | 结构化提取能力最强 |
-| 向量搜索 | Supabase pgvector | 无需额外向量数据库服务 |
-| 文件存储 | Supabase Storage | Markdown 上传，与 DB 同项目 |
-| 图谱渲染 | 自定义 Canvas + `requestAnimationFrame` | 力导向库无法实现轨道动画 |
-| 部署 | Vercel | Next.js 零配置部署，Hobby 免费套餐 |
+| 层 | 技术 |
+|---|---|
+| Framework | Next.js 16 App Router |
+| UI | React 19 + Tailwind CSS v4 |
+| Auth | Supabase Auth |
+| Database | Supabase PostgreSQL |
+| ORM | Prisma 7 + `@prisma/adapter-pg` |
+| Storage | Supabase Storage |
+| AI | Anthropic Claude API |
+| Deploy target | Vercel |
 
----
+## 项目文档
+
+本项目按仓库规范维护以下文档：
+
+- `01-project-brief.md` - 项目目标、范围、风险。
+- `02-prd.md` - Phase 1 产品需求。
+- `03-runbook.md` - 安装、运行、验证步骤。
+- `04-ai-usage.md` - AI 使用记录。
+- `05-submission.md` - 当前提交说明。
+- `06-review-checklist.md` - 提交前自查清单。
+
+更多设计记录放在 `docs/` 目录下。
 
 ## 本地运行
 
 ```bash
-git clone https://github.com/F1sh2712/neuron-map.git
-cd neuron-map
 npm install
+npx prisma generate
+npx prisma db push
+npm run dev
 ```
 
-创建 `.env.local`：
+打开：
+
+```text
+http://localhost:3000
+```
+
+需要在 `.env.local` 中配置：
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-DATABASE_URL=postgresql://...pooler.supabase.com:6543/postgres?pgbouncer=true
-DIRECT_URL=postgresql://...pooler.supabase.com:5432/postgres
+DATABASE_URL=postgresql://...
+DIRECT_URL=postgresql://...
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-```bash
-npx prisma db push      # 同步 Schema 到 Supabase
-npm run dev             # http://localhost:3000
-```
+不要提交 `.env.local` 或任何真实 secret。
 
----
-
-## 常用命令
+## 验证命令
 
 ```bash
-npm run dev           # 启动开发服务器（Turbopack）
-npm run build         # 生产构建（PR 前必须通过）
-npm run lint          # ESLint 检查
-
-npx prisma db push    # 同步 Schema 变更到 Supabase
-npx prisma generate   # 重新生成 Prisma 客户端
-npx prisma studio     # 可视化数据库管理（仅开发用）
+npx tsc --noEmit
+npm run lint
+npm run build
 ```
 
----
+最新本地验证记录在：
 
-## 安全说明
+```text
+evidence/logs/2026-07-04-verification.md
+```
 
-- `ANTHROPIC_API_KEY` 和 `SUPABASE_SERVICE_ROLE_KEY` 仅在服务端使用，不暴露给客户端
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` 可公开（Supabase 行级安全策略控制访问权限）
-- 所有 AI 调用均通过 `src/app/api/` 服务端路由执行
+## 下一步实现计划
 
----
+1. 把上传从 PDF 改为 Markdown（`.md`，最大 5MB）。
+2. 增加按标题解析的 Markdown parser。
+3. 把提取流程改为按 Markdown chunk 调用 Claude。
+4. 增加 `GET /api/documents/[id]/status`。
+5. 增加文档列表和提取结果详情页。
+6. 把手动验证证据保存到 `evidence/`。
 
-> Read in English: [README.md](README.md)
+## 安全规则
+
+- 不提交 `.env`、`.env.local`、数据库连接串、API key 或真实用户数据。
+- 截图和测试数据使用虚构内容。
+- AI API 调用必须在服务端完成。
