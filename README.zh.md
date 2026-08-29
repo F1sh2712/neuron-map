@@ -31,26 +31,27 @@ Markdown 比 PDF 更适合 Phase 1：
 已完成：
 
 - Next.js App Router 项目基础结构。
-- Supabase Auth 登录和注册流程。
-- OTP 验证、设置密码、完善资料。
+- Supabase Auth 登录和注册流程（邮箱 OTP、设置密码、完善资料）。
 - `/dashboard` 登录保护。
 - Prisma 数据模型：用户、文档、知识节点、知识关系，以及后续 chat 占位表。
-- 初版文档创建 API。
-- 初版 Claude 提取 API 原型。
+- Markdown（.md）上传至 Supabase Storage，含客户端文件类型和 5MB 大小校验。
+- Claude 从 Markdown 提取知识：概念节点按标题深度分为 star / planet / asteroid 三层，并生成带类型和权重的关系边。已用样例验证（10 个层级正确的节点，16 条边）。
+- 宇宙图谱视图：自定义 Canvas + requestAnimationFrame 轨道动画（恒星锚定、行星绕恒星、陨石绕行星），支持拖拽重新归属、点击查看详情、悬停高亮。
+- 代码全部英文（UI、prompt、注释、API 消息）。
 - TypeScript、lint、production build 当前可以通过。
 
 部分完成：
 
-- 上传页面已经存在，但目前接受 PDF，需要改成 Phase 1 的 Markdown 上传。
-- 提取 API 可以写入节点和关系，但还缺 Markdown 解析、分块处理、进度状态和重复数据保护。
+- 提取目前是单次同步 Claude 调用；大文档需要异步任务 + 状态查询以避免 serverless 超时。
+- 更清晰的“学习”视图（技能树布局）正在做视觉设计；宇宙视图是当前默认。
 
 未完成：
 
-- Markdown parser。
 - 文档列表和文档详情页。
 - 状态轮询 API。
-- Canvas 知识图谱渲染器。
-- embeddings 和 AI chat。
+- 技能树学习视图（实现）。
+- 跨文件知识合并（embeddings / pgvector）。
+- AI chat。
 - 线上 preview 部署。
 
 ## 技术栈
@@ -122,12 +123,11 @@ evidence/logs/2026-07-04-verification.md
 
 ## 下一步实现计划
 
-1. 把上传从 PDF 改为 Markdown（`.md`，最大 5MB）。
-2. 增加按标题解析的 Markdown parser。
-3. 把提取流程改为按 Markdown chunk 调用 Claude。
-4. 增加 `GET /api/documents/[id]/status`。
-5. 增加文档列表和提取结果详情页。
-6. 把手动验证证据保存到 `evidence/`。
+1. 实现技能树学习视图（视觉方向已确定），作为宇宙图谱之外可切换的第二视图。
+2. 增加文档列表和文档详情页。
+3. 把提取改为异步 + `GET /api/documents/[id]/status` 轮询，让大文档不超 serverless 超时。
+4. 跨文件知识合并：用 embeddings + pgvector 把不同文档里的同一概念连起来。
+5. 把手动验证证据保存到 `evidence/`。
 
 ## 安全规则
 

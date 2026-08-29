@@ -31,26 +31,27 @@ Direct PDF parsing with Claude is useful for quick demos, but it is more expensi
 Completed:
 
 - Next.js App Router project setup.
-- Supabase Auth login and registration flow.
-- OTP verification and password setup.
+- Supabase Auth login and registration flow (email OTP, password setup, profile).
 - Protected dashboard route.
 - Prisma schema for users, documents, knowledge nodes, edges, and chat placeholder tables.
-- Initial document creation API.
-- Initial Claude extraction API prototype.
+- Markdown (.md) upload to Supabase Storage, with client-side type and 5 MB size validation.
+- Claude knowledge extraction from Markdown: concept nodes tiered as star / planet / asteroid by heading depth, plus typed, weighted relationship edges. Verified on a sample (10 correctly tiered nodes, 16 edges).
+- Cosmic graph view: a custom Canvas + requestAnimationFrame orbital renderer (stars anchored, planets orbit stars, asteroids orbit planets), with drag-to-reattach, click-to-inspect, and hover highlight.
+- Codebase written in English throughout (UI, prompts, comments, API messages).
 - Build, TypeScript, and lint checks currently pass.
 
 Partially complete:
 
-- Upload page exists, but it currently accepts PDF and must be changed to Markdown for Phase 1.
-- Extraction stores nodes and edges, but it still needs Markdown parsing, chunking, progress status, and retry-safe behavior.
+- Extraction is a single synchronous Claude call; large documents need an async job + status so it stays within the serverless timeout.
+- A clearer "study" view (skill-tree layout) is in visual design; the cosmic view is the current default.
 
 Not complete:
 
-- Markdown parser.
 - Document list and detail pages.
 - Status polling API.
-- Canvas knowledge graph renderer.
-- Embeddings and AI chat.
+- Skill-tree learning view (implementation).
+- Cross-file knowledge merging (embeddings / pgvector).
+- AI chat.
 - Preview deployment.
 
 ## Tech Stack
@@ -122,12 +123,11 @@ evidence/logs/2026-07-04-verification.md
 
 ## Next Implementation Steps
 
-1. Change upload from PDF to Markdown (`.md`, max 5MB).
-2. Add a Markdown parser for heading-based sections.
-3. Update extraction to process Markdown chunks.
-4. Add `GET /api/documents/[id]/status`.
-5. Add document list and extracted-result detail view.
-6. Save manual test evidence under `evidence/`.
+1. Build the skill-tree learning view (a settled visual direction) as a second, switchable view alongside the cosmic graph.
+2. Add a document list and a document detail page.
+3. Make extraction asynchronous with `GET /api/documents/[id]/status` polling, so large documents stay within the serverless timeout.
+4. Cross-file knowledge merging: embeddings + pgvector to connect the same concept across different uploads.
+5. Save manual test evidence under `evidence/`.
 
 ## Security Notes
 
