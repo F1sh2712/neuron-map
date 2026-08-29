@@ -14,14 +14,14 @@ export default async function DashboardPage() {
         <img src="/icon.svg" alt="NeuronMap" className="w-full h-full" />
       </div>
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-3">欢迎回来</h1>
+        <h1 className="text-4xl font-bold text-white mb-3">Welcome back</h1>
         <p className="text-lg text-zinc-400">
           <span className="font-semibold text-violet-400">{displayName}</span>
-          ，你的知识宇宙正在等你
+          , your knowledge universe is waiting
         </p>
       </div>
       <div className="mt-4 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-zinc-500">
-        Dashboard 开发中 · 下一步：上传第一份 Markdown 笔记
+        Dashboard in progress · Next: upload your first Markdown notes
       </div>
     </div>
   )

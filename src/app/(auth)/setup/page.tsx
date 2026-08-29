@@ -15,7 +15,7 @@ function getPasswordStrength(pwd: string): 0 | 1 | 2 | 3 {
   return 2
 }
 
-const STRENGTH_LABEL = ['', '弱', '中', '强']
+const STRENGTH_LABEL = ['', 'Weak', 'Medium', 'Strong']
 const STRENGTH_BAR_COLOR = ['', 'bg-red-500', 'bg-yellow-400', 'bg-green-500']
 const STRENGTH_TEXT_COLOR = ['', 'text-red-400', 'text-yellow-400', 'text-green-400']
 
@@ -32,8 +32,8 @@ export default function SetupPage() {
   const strength = getPasswordStrength(password)
 
   async function setPasswordStep() {
-    if (strength < 2) { setError('密码强度不足，请达到"中"级以上'); return }
-    if (password !== confirm) { setError('两次密码输入不一致'); return }
+    if (strength < 2) { setError('Password is too weak — reach at least "Medium"'); return }
+    if (password !== confirm) { setError('Passwords do not match'); return }
     setError('')
     setLoading(true)
     const supabase = createClient()
@@ -52,7 +52,7 @@ export default function SetupPage() {
       body: JSON.stringify({ username: username.trim() || null, bio: bio.trim() || null }),
     })
     setLoading(false)
-    if (!res.ok) { setError('保存资料失败，请重试'); return }
+    if (!res.ok) { setError('Failed to save profile, please try again'); return }
     router.push('/dashboard')
     router.refresh()
   }
@@ -65,13 +65,13 @@ export default function SetupPage() {
           <div>
             <h1 className="text-xl font-bold text-white leading-none">NeuronMap</h1>
             <p className="text-xs text-zinc-500 mt-0.5">
-              {step === 'password' ? '设置你的密码' : '完善个人资料'}
+              {step === 'password' ? 'Set your password' : 'Complete your profile'}
             </p>
           </div>
         </div>
 
         <div className="flex gap-1 mb-6">
-          {(['password', 'profile'] as Step[]).map((s, i) => (
+          {(['password', 'profile'] as Step[]).map((s) => (
             <div key={s} className={`flex-1 h-1 rounded-full transition-colors ${
               step === 'profile' || s === step ? 'bg-violet-600' : 'bg-zinc-800'
             }`} />
@@ -80,9 +80,9 @@ export default function SetupPage() {
 
         {step === 'password' && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-zinc-400">邮箱验证成功！现在设置你的登录密码</p>
+            <p className="text-sm text-zinc-400">Email verified! Now set your login password</p>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">密码</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Password</label>
               <input
                 type="password"
                 value={password}
@@ -102,16 +102,16 @@ export default function SetupPage() {
                     ))}
                   </div>
                   <p className={`text-xs ${STRENGTH_TEXT_COLOR[strength]}`}>
-                    密码强度：{STRENGTH_LABEL[strength]}
-                    {strength === 1 && ' — 需至少 8 位，含字母和数字'}
-                    {strength === 2 && ' — 可继续增强（12位+大小写+特殊符号）'}
-                    {strength === 3 && ' — 非常安全'}
+                    Strength: {STRENGTH_LABEL[strength]}
+                    {strength === 1 && ' — needs at least 8 chars, with letters and numbers'}
+                    {strength === 2 && ' — can be stronger (12+ chars, mixed case + symbol)'}
+                    {strength === 3 && ' — very secure'}
                   </p>
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">确认密码</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Confirm password</label>
               <input
                 type="password"
                 value={confirm}
@@ -124,7 +124,7 @@ export default function SetupPage() {
                 }`}
               />
               {confirm.length > 0 && confirm !== password && (
-                <p className="text-xs text-red-400 mt-1">密码不一致</p>
+                <p className="text-xs text-red-400 mt-1">Passwords do not match</p>
               )}
             </div>
             {error && (
@@ -135,32 +135,32 @@ export default function SetupPage() {
               disabled={!password || !confirm || loading}
               className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
             >
-              {loading ? '设置中...' : '设置密码'}
+              {loading ? 'Setting...' : 'Set password'}
             </button>
           </div>
         )}
 
         {step === 'profile' && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-zinc-400">完善个人资料（可跳过）</p>
+            <p className="text-sm text-zinc-400">Complete your profile (optional)</p>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">用户名</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Username</label>
               <input
                 type="text"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
-                placeholder="你想叫什么？"
+                placeholder="What should we call you?"
                 autoFocus
                 maxLength={32}
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">个人简介</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Bio</label>
               <textarea
                 value={bio}
                 onChange={e => setBio(e.target.value)}
-                placeholder="介绍一下自己..."
+                placeholder="Tell us about yourself..."
                 rows={3}
                 maxLength={200}
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none"
@@ -174,7 +174,7 @@ export default function SetupPage() {
               disabled={loading}
               className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
             >
-              {loading ? '保存中...' : '进入我的宇宙'}
+              {loading ? 'Saving...' : 'Enter my universe'}
             </button>
           </div>
         )}

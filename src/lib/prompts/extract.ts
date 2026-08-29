@@ -1,54 +1,53 @@
-export const EXTRACTION_SYSTEM_PROMPT = `你是 NeuronMap 的知识图谱提取引擎。用户会上传学习材料（PDF 课件、笔记、教材）。你的任务是把材料里的知识抽象成一个"知识宇宙"——概念节点和它们之间的关系。
+export const EXTRACTION_SYSTEM_PROMPT = `You are the knowledge-graph extraction engine for NeuronMap. Users upload study material (Markdown notes, lecture handouts, textbook chapters). Your job is to distill the material into a "knowledge universe" — concept nodes and the relationships between them.
 
-## 三层节点结构（宇宙隐喻）
+## Three-tier node structure (cosmic metaphor)
 
-- **star（恒星）**：章节级的顶层核心概念。整份材料通常有 2-6 个恒星。对应最高层的主题。
-- **planet（行星）**：从属于某个恒星的二级知识点。绕恒星运转。
-- **asteroid（陨石）**：具体的定义、例子、公式、细节。绕行星运转。
+- **star**: A top-level, broadest core concept (chapter/topic level). A typical document has 2-6 stars.
+- **planet**: A second-level concept that belongs to a star. Orbits its star.
+- **asteroid**: A concrete detail, definition, example, or formula. Orbits its planet.
 
-判定层级时，优先参考材料本身的标题层级（一级标题→恒星，二级→行星，三级及更细→陨石），没有明确标题时按概念的抽象程度自行判断。
+Prefer the material's own heading hierarchy when assigning levels: a top-level heading (# / H1) is a star, a second-level heading (## / H2) is a planet, deeper headings (### and below) are asteroids. When there is no clear heading, judge by how broad or narrow the concept is.
 
-## 关系（边）
+## Relationships (edges)
 
-在有实质关联的节点之间建立边，用 relationType 描述关系类型，常见值：
-- "contains"（包含 / 属于，如恒星包含行星）
-- "depends"（依赖 / 前置知识）
-- "related"（相关）
-- "contrast"（对比 / 区别）
+Create an edge between nodes that have a genuine connection. Use relationType to describe it:
+- "contains" (a star contains a planet, a broader concept contains a narrower one)
+- "depends" (prerequisite / dependency)
+- "related" (associated)
+- "contrast" (comparison / distinction)
 
-weight 是关系强度，0.0-1.0，越紧密越高。
+weight is the strength of the relationship, 0.0-1.0; tighter links score higher.
 
-## 要求
+## Requirements
 
-1. 只提取材料里**真实出现**的概念，不要编造或补充材料外的知识。
-2. 每个节点的 summary 用 1-2 句话概括这个概念是什么，用中文。
-3. 节点数量适中：一份材料通常 15-50 个节点，不要把每个词都拆成节点。
-4. 图表、流程图里的关键概念也要提取，但如果图片细节看不清（箭头方向、小数字模糊），宁可保守，不要猜测不确定的关系。
-5. 通过调用 save_knowledge_graph 工具返回结果。每个节点分配一个短 key（如 n1, n2），边用 key 引用节点。`
+1. Only extract concepts that actually appear in the material. Do not invent or add outside knowledge.
+2. Write each node's summary as 1-2 sentences describing what the concept is, in the same language as the source material.
+3. Keep the node count reasonable: a typical document yields 15-50 nodes. Do not turn every word into a node.
+4. Return the result by calling the save_knowledge_graph tool. Assign each node a short key (e.g. n1, n2); edges reference nodes by their key.`
 
 export const EXTRACTION_TOOL = {
   name: 'save_knowledge_graph',
-  description: '保存从材料中提取的知识节点和关系',
+  description: 'Save the knowledge nodes and relationships extracted from the material',
   input_schema: {
     type: 'object' as const,
     properties: {
       nodes: {
         type: 'array',
-        description: '知识节点列表',
+        description: 'List of knowledge nodes',
         items: {
           type: 'object',
           properties: {
-            key: { type: 'string', description: '节点唯一短标识，如 n1、n2' },
-            title: { type: 'string', description: '概念名称，简短' },
-            summary: { type: 'string', description: '1-2 句话概括这个概念（中文）' },
+            key: { type: 'string', description: 'Unique short id for the node, e.g. n1, n2' },
+            title: { type: 'string', description: 'Concept name, concise' },
+            summary: { type: 'string', description: '1-2 sentence description of the concept (same language as the source)' },
             level: {
               type: 'string',
               enum: ['star', 'planet', 'asteroid'],
-              description: '节点层级',
+              description: 'Node tier',
             },
             sourceHeading: {
               type: 'string',
-              description: '来源标题或章节（可选）',
+              description: 'Source heading or section (optional)',
             },
           },
           required: ['key', 'title', 'summary', 'level'],
@@ -56,17 +55,17 @@ export const EXTRACTION_TOOL = {
       },
       edges: {
         type: 'array',
-        description: '节点之间的关系',
+        description: 'Relationships between nodes',
         items: {
           type: 'object',
           properties: {
-            from: { type: 'string', description: '起点节点的 key' },
-            to: { type: 'string', description: '终点节点的 key' },
+            from: { type: 'string', description: 'Source node key' },
+            to: { type: 'string', description: 'Target node key' },
             relationType: {
               type: 'string',
               description: 'contains / depends / related / contrast',
             },
-            weight: { type: 'number', description: '关系强度 0.0-1.0' },
+            weight: { type: 'number', description: 'Relationship strength 0.0-1.0' },
           },
           required: ['from', 'to', 'relationType'],
         },

@@ -42,6 +42,7 @@ When writing code, follow the `karpathy-guidelines` skill (in `skills/andrej-kar
 - **Simplicity first** — Minimum code that solves the problem. No speculative features.
 - **Surgical changes** — Touch only what the task requires. Don't "improve" adjacent code.
 - **Goal-driven execution** — Define verifiable success criteria. Loop until verified.
+- **English-only codebase** — All code is written in English: UI strings, comments, Claude prompts, error/log messages, commit messages. No Chinese in the code. This is a job-search portfolio reviewed by Australian employers. A bilingual content layer may come later, but English is the default. (See CLAUDE.md → Coding Conventions.)
 
 ## AI Usage Rules
 

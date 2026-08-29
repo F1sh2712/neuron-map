@@ -30,15 +30,16 @@ export async function POST(
 
   const document = await db.document.findUnique({ where: { id } })
   if (!document || document.userId !== user.id) {
-    return NextResponse.json({ error: '文档不存在' }, { status: 404 })
+    return NextResponse.json({ error: 'Document not found' }, { status: 404 })
   }
 
   try {
     await db.document.update({ where: { id }, data: { status: 'PROCESSING' } })
 
-    const pdfRes = await fetch(document.fileUrl)
-    if (!pdfRes.ok) throw new Error(`无法读取 PDF 文件: ${pdfRes.status}`)
-    const base64 = Buffer.from(await pdfRes.arrayBuffer()).toString('base64')
+    const mdRes = await fetch(document.fileUrl)
+    if (!mdRes.ok) throw new Error(`Failed to read Markdown file: ${mdRes.status}`)
+    const markdown = await mdRes.text()
+    if (!markdown.trim()) throw new Error('Markdown file is empty')
 
     const message = await anthropic.messages.create({
       model: EXTRACTION_MODEL,
@@ -49,13 +50,7 @@ export async function POST(
       messages: [
         {
           role: 'user',
-          content: [
-            {
-              type: 'document',
-              source: { type: 'base64', media_type: 'application/pdf', data: base64 },
-            },
-            { type: 'text', text: '请从这份材料中提取知识图谱。' },
-          ],
+          content: `Here is the user's uploaded Markdown study material. Extract the knowledge graph:\n\n${markdown}`,
         },
       ],
     })
@@ -64,24 +59,24 @@ export async function POST(
 
     const toolUse = message.content.find((b) => b.type === 'tool_use')
     if (!toolUse || toolUse.type !== 'tool_use') {
-      console.error('[extract] 无 tool_use，返回内容:', JSON.stringify(message.content, null, 2))
-      throw new Error('Claude 未返回结构化结果')
+      console.error('[extract] no tool_use, response content:', JSON.stringify(message.content, null, 2))
+      throw new Error('Claude did not return a structured result')
     }
 
-    console.log('[extract] Claude 原始返回:', JSON.stringify(toolUse.input, null, 2))
+    console.log('[extract] Claude raw output:', JSON.stringify(toolUse.input, null, 2))
 
     const { nodes, edges } = toolUse.input as {
       nodes: ExtractedNode[]
       edges: ExtractedEdge[]
     }
 
-    console.log(`[extract] 解析到 ${nodes?.length ?? 0} 节点, ${edges?.length ?? 0} 边`)
+    console.log(`[extract] parsed ${nodes?.length ?? 0} nodes, ${edges?.length ?? 0} edges`)
 
     const keyToId = new Map<string, string>()
     let skipped = 0
     for (const n of nodes) {
       if (!n.title || !n.summary) {
-        console.warn('[extract] 跳过缺字段的节点:', JSON.stringify(n))
+        console.warn('[extract] skipping node with missing fields:', JSON.stringify(n))
         skipped++
         continue
       }
@@ -96,7 +91,7 @@ export async function POST(
       })
       keyToId.set(n.key, created.id)
     }
-    if (skipped > 0) console.warn(`[extract] 共跳过 ${skipped} 个缺字段节点`)
+    if (skipped > 0) console.warn(`[extract] skipped ${skipped} nodes with missing fields`)
 
     const seen = new Set<string>()
     let edgeCount = 0
@@ -132,7 +127,7 @@ export async function POST(
     })
   } catch (err) {
     await db.document.update({ where: { id }, data: { status: 'FAILED' } })
-    const msg = err instanceof Error ? err.message : '提取失败'
+    const msg = err instanceof Error ? err.message : 'Extraction failed'
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

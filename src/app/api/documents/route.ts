@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   const { title, fileUrl } = await req.json()
 
   if (!title || !fileUrl) {
-    return NextResponse.json({ error: 'title 和 fileUrl 必填' }, { status: 400 })
+    return NextResponse.json({ error: 'title and fileUrl are required' }, { status: 400 })
   }
 
   const document = await db.document.create({

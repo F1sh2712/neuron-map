@@ -128,6 +128,7 @@ For production, set all of the above in Vercel → Project → Settings → Envi
 
 ## Coding Conventions
 
+- **English-only codebase** — all code must be in English: UI strings, code comments, Claude system prompts, API error messages, log messages, and commit messages. No Chinese in the code. This is a job-portfolio project reviewed by Australian employers, so the repo must read as an English codebase. A bilingual (EN/中文) content layer may be added later, but English is the default. (Claude-generated node summaries should match the source material's language.)
 - **TypeScript everywhere** — no `any`, no untyped props.
 - **Server Components by default** — only add `"use client"` when the component needs browser APIs, event handlers, or React state.
 - **API routes are server-only** — all DB and AI calls go in `src/app/api/` handlers.

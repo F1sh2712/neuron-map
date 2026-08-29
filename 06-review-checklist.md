@@ -21,6 +21,7 @@ Use this before opening a PR.
 - [ ] Document list/result view is implemented.
 - [ ] No unrelated generated artifacts are included in PR.
 - [ ] No secrets or real user data are committed.
+- [ ] All code is in English (UI strings, comments, prompts, error/log messages) — no Chinese in the codebase.
 
 ## Verification
 

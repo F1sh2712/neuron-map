@@ -13,6 +13,8 @@ type Result = {
   usage?: { input_tokens: number; output_tokens: number }
 }
 
+const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+
 const LEVEL_STYLE: Record<string, { icon: string; color: string }> = {
   star: { icon: '⭐', color: 'text-yellow-400' },
   planet: { icon: '🪐', color: 'text-violet-400' },
@@ -28,38 +30,51 @@ export default function UploadPage() {
   async function handleFile(file: File) {
     setError('')
     setResult(null)
+
+    // Client-side validation (no request is sent if it fails)
+    if (!file.name.toLowerCase().endsWith('.md')) {
+      setError('Only Markdown (.md) files are supported')
+      setPhase('error')
+      return
+    }
+    if (file.size > MAX_SIZE) {
+      setError('File must not exceed 5MB')
+      setPhase('error')
+      return
+    }
+
     setFileName(file.name)
 
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setError('未登录'); setPhase('error'); return }
+    if (!user) { setError('Not signed in'); setPhase('error'); return }
 
-    // 1. 浏览器直传 Supabase Storage
+    // 1. Upload directly from the browser to Supabase Storage
     setPhase('uploading')
     const path = `${user.id}/${Date.now()}-${file.name.replace(/[^\w.-]/g, '_')}`
     const { error: uploadErr } = await supabase.storage
       .from('documents')
-      .upload(path, file, { contentType: 'application/pdf' })
-    if (uploadErr) { setError(`上传失败：${uploadErr.message}`); setPhase('error'); return }
+      .upload(path, file, { contentType: 'text/markdown' })
+    if (uploadErr) { setError(`Upload failed: ${uploadErr.message}`); setPhase('error'); return }
 
     const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
     const fileUrl = urlData.publicUrl
 
-    // 2. 创建 Document 记录
+    // 2. Create the Document record
     const docRes = await fetch('/api/documents', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: file.name.replace(/\.pdf$/i, ''), fileUrl }),
+      body: JSON.stringify({ title: file.name.replace(/\.md$/i, ''), fileUrl }),
     })
-    if (!docRes.ok) { setError('创建文档记录失败'); setPhase('error'); return }
+    if (!docRes.ok) { setError('Failed to create document record'); setPhase('error'); return }
     const { id } = await docRes.json()
 
-    // 3. 触发 Claude 提取
+    // 3. Trigger Claude extraction
     setPhase('extracting')
     const extractRes = await fetch(`/api/documents/${id}/extract`, { method: 'POST' })
     const extractData = await extractRes.json()
     if (!extractRes.ok) {
-      setError(`提取失败：${extractData.error ?? '未知错误'}`)
+      setError(`Extraction failed: ${extractData.error ?? 'Unknown error'}`)
       setPhase('error')
       return
     }
@@ -76,8 +91,8 @@ export default function UploadPage() {
         <div className="flex items-center gap-3 mb-8">
           <img src="/icon.svg" alt="NeuronMap" className="w-10 h-10 rounded-xl" />
           <div>
-            <h1 className="text-2xl font-bold text-white leading-none">上传学习材料</h1>
-            <p className="text-sm text-zinc-500 mt-1">上传 PDF，AI 自动提取知识节点</p>
+            <h1 className="text-2xl font-bold text-white leading-none">Upload study material</h1>
+            <p className="text-sm text-zinc-500 mt-1">Upload Markdown notes and AI extracts the knowledge nodes</p>
           </div>
         </div>
 
@@ -88,7 +103,7 @@ export default function UploadPage() {
         >
           <input
             type="file"
-            accept="application/pdf,.pdf"
+            accept=".md,text/markdown"
             className="hidden"
             disabled={busy}
             onChange={(e) => {
@@ -96,19 +111,19 @@ export default function UploadPage() {
               if (f) handleFile(f)
             }}
           />
-          <div className="text-4xl mb-3">📄</div>
-          <p className="text-zinc-300 font-medium">点击选择 PDF 文件</p>
-          <p className="text-xs text-zinc-600 mt-1">Phase 1 仅支持 .pdf</p>
+          <div className="text-4xl mb-3">📝</div>
+          <p className="text-zinc-300 font-medium">Click to choose a Markdown file</p>
+          <p className="text-xs text-zinc-600 mt-1">Phase 1 supports .md only, up to 5MB</p>
         </label>
 
         {phase === 'uploading' && (
           <p className="mt-6 text-sm text-violet-400 flex items-center gap-2">
-            <span className="animate-pulse">●</span> 正在上传 {fileName}...
+            <span className="animate-pulse">●</span> Uploading {fileName}...
           </p>
         )}
         {phase === 'extracting' && (
           <p className="mt-6 text-sm text-violet-400 flex items-center gap-2">
-            <span className="animate-pulse">●</span> Claude 正在分析材料，提取知识节点...（大文件可能需要 10-60 秒）
+            <span className="animate-pulse">●</span> Claude is analyzing the notes and extracting knowledge nodes...
           </p>
         )}
 
@@ -121,8 +136,8 @@ export default function UploadPage() {
         {phase === 'done' && result && (
           <div className="mt-8">
             <div className="flex items-center gap-4 mb-4 text-sm">
-              <span className="text-green-400 font-medium">✓ 提取完成</span>
-              <span className="text-zinc-400">{result.nodeCount} 个节点 · {result.edgeCount} 条关系</span>
+              <span className="text-green-400 font-medium">✓ Extraction complete</span>
+              <span className="text-zinc-400">{result.nodeCount} nodes · {result.edgeCount} relationships</span>
               {result.usage && (
                 <span className="text-zinc-600">
                   {result.usage.input_tokens + result.usage.output_tokens} tokens
