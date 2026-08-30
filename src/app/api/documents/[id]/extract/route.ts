@@ -4,25 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { anthropic, EXTRACTION_MODEL } from '@/lib/anthropic'
 import { EXTRACTION_SYSTEM_PROMPT, EXTRACTION_TOOL } from '@/lib/prompts/extract'
+import { buildGraphRows, type ExtractedNode, type ExtractedEdge } from '@/lib/extraction'
 
 // Extraction takes ~20-40s for a typical document; Vercel Hobby allows up to 60s.
 export const maxDuration = 60
 
 const MAX_MD_BYTES = 5 * 1024 * 1024
-
-type ExtractedNode = {
-  key: string
-  title: string
-  summary: string
-  level: string
-  sourceHeading?: string
-}
-type ExtractedEdge = {
-  from: string
-  to: string
-  relationType: string
-  weight?: number
-}
 
 export async function POST(
   _req: Request,
@@ -95,44 +82,11 @@ export async function POST(
     console.log(`[extract] parsed ${nodes.length} nodes, ${Array.isArray(edges) ? edges.length : 0} edges`)
     await db.document.update({ where: { id }, data: { extractProgress: 70 } })
 
-    // Pre-generate ids so nodes and edges can be written with createMany
-    // inside a single transaction (atomic, no N+1 round trips).
-    const keyToId = new Map<string, string>()
-    const nodeRows = []
-    for (const n of nodes) {
-      if (!n.title || !n.summary || !n.key) {
-        console.warn('[extract] skipping node with missing fields:', JSON.stringify(n))
-        continue
-      }
-      const nodeId = randomUUID()
-      keyToId.set(n.key, nodeId)
-      nodeRows.push({
-        id: nodeId,
-        documentId: id,
-        title: n.title,
-        summary: n.summary,
-        level: ['star', 'planet', 'asteroid'].includes(n.level) ? n.level : 'planet',
-        sourceHeading: n.sourceHeading ?? null,
-      })
-    }
+    // Pre-generated ids let nodes and edges be written with createMany inside
+    // a single transaction (atomic, no N+1 round trips).
+    const { nodeRows, edgeRows, skippedNodes } = buildGraphRows(nodes, edges, id, randomUUID)
+    if (skippedNodes > 0) console.warn(`[extract] skipped ${skippedNodes} malformed node(s)`)
     if (nodeRows.length === 0) throw new Error('All extracted nodes were malformed')
-
-    const seen = new Set<string>()
-    const edgeRows = []
-    for (const e of Array.isArray(edges) ? edges : []) {
-      const fromId = keyToId.get(e.from)
-      const toId = keyToId.get(e.to)
-      if (!fromId || !toId || fromId === toId) continue
-      const pairKey = `${fromId}->${toId}`
-      if (seen.has(pairKey)) continue
-      seen.add(pairKey)
-      edgeRows.push({
-        fromNodeId: fromId,
-        toNodeId: toId,
-        relationType: e.relationType || 'related',
-        weight: typeof e.weight === 'number' ? e.weight : 0.5,
-      })
-    }
 
     await db.$transaction([
       // Clear any leftovers from a previous failed run before inserting.
