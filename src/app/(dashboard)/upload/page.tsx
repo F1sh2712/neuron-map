@@ -24,7 +24,7 @@ const LEVEL_STYLE: Record<string, { icon: string; color: string }> = {
 
 function stageLabel(progress: number): string {
   if (progress < 25) return 'Reading your notes...'
-  if (progress < 70) return 'Claude is identifying concepts and relationships...'
+  if (progress < 70) return 'AI is identifying concepts and relationships...'
   if (progress < 100) return 'Building your knowledge graph...'
   return 'Done'
 }

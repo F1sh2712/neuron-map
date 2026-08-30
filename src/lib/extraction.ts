@@ -30,7 +30,7 @@ export type EdgeRow = {
 const VALID_LEVELS = ['star', 'planet', 'asteroid']
 
 /**
- * Turns Claude's raw tool output into DB-ready rows.
+ * Turns the model's raw tool output into DB-ready rows.
  * Pure and deterministic (id generation injected) so it is unit-testable:
  * skips malformed nodes, coerces invalid levels, drops edges that reference
  * unknown keys or self-loops, and dedupes repeated pairs.

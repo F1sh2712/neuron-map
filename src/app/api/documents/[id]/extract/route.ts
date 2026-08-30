@@ -75,7 +75,7 @@ export async function POST(
     const toolUse = message.content.find((b) => b.type === 'tool_use')
     if (!toolUse || toolUse.type !== 'tool_use') {
       console.error('[extract] no tool_use, response content:', JSON.stringify(message.content, null, 2))
-      throw new Error('Claude did not return a structured result')
+      throw new Error('The AI did not return a structured result')
     }
 
     const { nodes, edges } = toolUse.input as {
