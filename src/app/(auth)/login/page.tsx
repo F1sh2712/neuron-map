@@ -23,7 +23,7 @@ export default function LoginPage() {
     setLoading(false)
 
     if (error) {
-      setError('邮箱或密码错误')
+      setError('Invalid email or password')
       return
     }
 
@@ -38,13 +38,13 @@ export default function LoginPage() {
           <img src="/icon.svg" alt="NeuronMap" className="w-10 h-10 rounded-xl" />
           <div>
             <h1 className="text-xl font-bold text-white leading-none">NeuronMap</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">炼知 · 自筑知识谱系</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Build your knowledge universe</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">邮箱</label>
+            <label className="block text-sm font-medium text-zinc-400 mb-1.5">Email</label>
             <input
               type="email"
               value={email}
@@ -57,7 +57,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">密码</label>
+            <label className="block text-sm font-medium text-zinc-400 mb-1.5">Password</label>
             <input
               type="password"
               value={password}
@@ -80,14 +80,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full mt-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
           >
-            {loading ? '登录中...' : '登录'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-zinc-500">
-          还没有账号？{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" className="text-violet-400 hover:text-violet-300 transition-colors">
-            立即注册
+            Sign up
           </Link>
         </p>
       </div>

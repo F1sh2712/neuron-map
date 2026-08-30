@@ -1,65 +1,117 @@
-# 03 API Docs / 接口文档
+# API Documentation
 
-这里放前后端接口约定。前端和后端都必须以这里的字段、路径和响应格式为准。
+This document records the current and planned API contract for the Phase 1 MVP.
 
-## API 最低标准
+## POST /api/auth/profile
 
-每个 API 必须说明：
+Purpose: save or update the current user's profile after signup.
 
-- method
-- path
-- 用途
-- 是否需要登录或权限
-- 请求参数
-- 请求 body
-- 成功响应
-- 错误响应
-- 示例请求
-- 示例响应
+Auth: required.
 
-## Format / 推荐格式
-
-````md
-## API Name
-
-METHOD /api/path
-
-### Purpose
-
-说明这个接口做什么。
-
-### Request Params
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-
-### Request Body
+Request body:
 
 ```json
 {
-  "field": "value"
+  "username": "Alice",
+  "bio": "COMP9021 student"
 }
 ```
 
-### Success Response
+Success response:
 
 ```json
 {
-  "id": "example_id"
+  "success": true
 }
 ```
 
-### Error Cases
+Errors:
 
-- `400`: invalid input
-- `401`: unauthorized
-- `404`: not found
-````
+- `401` unauthorized.
 
-## Rules / 规则
+Current status: implemented.
 
-- 前端不能靠猜测调用后端接口。
-- 后端不能随意改变 response shape。
-- 字段名称要稳定。
-- 错误情况必须说明。
-- 如果接口变更，要同步更新文档。
+## POST /api/documents
+
+Purpose: create document metadata after a file upload.
+
+Auth: required.
+
+Request body:
+
+```json
+{
+  "title": "Week 1 Notes",
+  "fileUrl": "https://..."
+}
+```
+
+Success response:
+
+```json
+{
+  "id": "document_id"
+}
+```
+
+Errors:
+
+- `400` missing `title` or `fileUrl`.
+- `401` unauthorized.
+
+Current status: implemented, but should be tightened so `fileUrl` belongs to the current user's storage path.
+
+## POST /api/documents/[id]/extract
+
+Purpose: extract knowledge nodes and edges for one document.
+
+Auth: required. The document must belong to the current user.
+
+Success response:
+
+```json
+{
+  "status": "COMPLETED",
+  "nodeCount": 8,
+  "edgeCount": 5,
+  "nodes": [
+    {
+      "title": "Recursion",
+      "level": "star",
+      "summary": "A technique where a function solves a problem by calling itself on smaller inputs."
+    }
+  ]
+}
+```
+
+Errors:
+
+- `401` unauthorized.
+- `404` document not found.
+- `500` extraction failed.
+
+Current status: implemented as a PDF prototype. Needs to become Markdown-first and use `COMPLETED` instead of `DONE`.
+
+## Planned APIs
+
+### GET /api/documents
+
+Purpose: list current user's documents.
+
+### GET /api/documents/[id]
+
+Purpose: return one document with its nodes and edges.
+
+### GET /api/documents/[id]/status
+
+Purpose: return processing status and progress.
+
+Example response:
+
+```json
+{
+  "id": "document_id",
+  "status": "PROCESSING",
+  "extractProgress": 60
+}
+```

@@ -1,38 +1,88 @@
-# 02 Database Guidelines / 数据说明
+# Database Documentation
 
-这里放数据模型、表结构、字段说明和数据约束。
+Database provider: PostgreSQL on Supabase.
 
-## 最低要求
+ORM: Prisma 7 with `@prisma/adapter-pg`.
 
-如果项目使用数据库，必须说明：
+Schema source: `prisma/schema.prisma`.
 
-- tables / collections
-- 字段
-- 字段类型
-- 必填字段
-- 关系
-- 索引，如果相关
-- seed / mock data
+## User
 
-## 规则
-
-- 字段命名要稳定。
-- 不要保存明文密码。
-- 不要提交真实学生数据。
-- 不要提交生产数据库连接串。
-- mock data 必须能看出是假的。
-
-## 表结构说明模板
-
-```md
-## Table Name / 表名
-
-Purpose:
+Purpose: store the app-level profile for a Supabase Auth user.
 
 | Field | Type | Required | Description |
-|-------|------|----------|-------------|
+|---|---|---|---|
+| `id` | String | yes | Supabase user id |
+| `email` | String | yes | Unique email |
+| `username` | String | no | Display name |
+| `bio` | String | no | Short profile |
+| `createdAt` | DateTime | yes | Creation time |
 
 Relationships:
 
-Open questions:
-```
+- One user has many documents.
+- One user has many chat sessions.
+
+## Document
+
+Purpose: store uploaded file metadata and extraction status.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | String | yes | Document id |
+| `userId` | String | yes | Owner user id |
+| `title` | String | yes | Display title |
+| `fileUrl` | String | yes | Supabase Storage URL |
+| `status` | String | yes | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
+| `extractProgress` | Int | yes | 0-100 progress |
+| `createdAt` | DateTime | yes | Upload time |
+
+Relationships:
+
+- One document belongs to one user.
+- One document has many knowledge nodes.
+
+## KnowledgeNode
+
+Purpose: store extracted concepts.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | String | yes | Node id |
+| `documentId` | String | yes | Source document |
+| `title` | String | yes | Concept title |
+| `summary` | String | yes | Short concept summary |
+| `level` | String | yes | `star`, `planet`, or `asteroid` |
+| `sourceHeading` | String | no | Markdown heading or section |
+| `createdAt` | DateTime | yes | Creation time |
+
+Embedding is deferred until the AI chat feature.
+
+## KnowledgeEdge
+
+Purpose: store relationships between extracted concepts.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | String | yes | Edge id |
+| `fromNodeId` | String | yes | Source node |
+| `toNodeId` | String | yes | Target node |
+| `relationType` | String | yes | `contains`, `depends`, `related`, or `contrast` |
+| `weight` | Float | yes | Relationship strength |
+| `createdAt` | DateTime | yes | Creation time |
+
+Constraint:
+
+- `fromNodeId` and `toNodeId` are unique as a pair.
+
+## ChatSession and ChatMessage
+
+Purpose: placeholders for a future AI chat feature.
+
+Current status: schema exists, feature is not implemented.
+
+## Open Database Tasks
+
+- Add indexes if document list or graph queries become slow.
+- Decide whether to model `status` and `level` as enums.
+- Add embedding column when pgvector search starts.

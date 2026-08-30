@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 
 type Step = 'email' | 'otp'
 
+const OTP_LENGTH = 8
+
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
@@ -29,7 +31,7 @@ export default function RegisterPage() {
   }
 
   async function verifyOtp() {
-    if (otp.length !== 6) { setError('请输入6位验证码'); return }
+    if (otp.length !== OTP_LENGTH) { setError(`Please enter the ${OTP_LENGTH}-digit code`); return }
     setError('')
     setLoading(true)
     const supabase = createClient()
@@ -39,7 +41,7 @@ export default function RegisterPage() {
       type: 'email',
     })
     setLoading(false)
-    if (error) { setError('验证码错误或已过期'); return }
+    if (error) { setError('Invalid or expired code'); return }
     router.push('/setup')
     router.refresh()
   }
@@ -51,15 +53,15 @@ export default function RegisterPage() {
           <img src="/icon.svg" alt="NeuronMap" className="w-10 h-10 rounded-xl" />
           <div>
             <h1 className="text-xl font-bold text-white leading-none">NeuronMap</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">创建你的知识宇宙</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Create your knowledge universe</p>
           </div>
         </div>
 
         {step === 'email' && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-zinc-400">输入邮箱，我们会发送一个6位验证码</p>
+            <p className="text-sm text-zinc-400">Enter your email and we&apos;ll send a {OTP_LENGTH}-digit code</p>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">邮箱地址</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Email address</label>
               <input
                 type="email"
                 value={email}
@@ -78,12 +80,12 @@ export default function RegisterPage() {
               disabled={!email || loading}
               className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
             >
-              {loading ? '发送中...' : '发送验证码'}
+              {loading ? 'Sending...' : 'Send code'}
             </button>
             <p className="text-center text-sm text-zinc-500">
-              已有账号？{' '}
+              Already have an account?{' '}
               <Link href="/login" className="text-violet-400 hover:text-violet-300 transition-colors">
-                直接登录
+                Sign in
               </Link>
             </p>
           </div>
@@ -92,21 +94,21 @@ export default function RegisterPage() {
         {step === 'otp' && (
           <div className="flex flex-col gap-4">
             <div>
-              <p className="text-white font-medium mb-1">输入验证码</p>
+              <p className="text-white font-medium mb-1">Enter the code</p>
               <p className="text-sm text-zinc-400">
-                已发送6位验证码至 <span className="text-zinc-200">{email}</span>
+                A {OTP_LENGTH}-digit code was sent to <span className="text-zinc-200">{email}</span>
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">验证码</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Verification code</label>
               <input
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                maxLength={6}
+                maxLength={OTP_LENGTH}
                 value={otp}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="123456"
+                onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, OTP_LENGTH))}
+                placeholder={'0'.repeat(OTP_LENGTH)}
                 autoFocus
                 onKeyDown={e => e.key === 'Enter' && verifyOtp()}
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent tracking-[0.4em] text-center text-base font-mono"
@@ -117,23 +119,23 @@ export default function RegisterPage() {
             )}
             <button
               onClick={verifyOtp}
-              disabled={otp.length !== 6 || loading}
+              disabled={otp.length !== OTP_LENGTH || loading}
               className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
             >
-              {loading ? '验证中...' : '验证'}
+              {loading ? 'Verifying...' : 'Verify'}
             </button>
             <button
               onClick={() => { setOtp(''); sendOtp() }}
               disabled={loading}
               className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors text-center"
             >
-              没收到？重新发送
+              Didn&apos;t get it? Resend
             </button>
             <button
               onClick={() => { setStep('email'); setOtp(''); setError('') }}
               className="text-sm text-zinc-600 hover:text-zinc-400 transition-colors text-center"
             >
-              ← 更换邮箱
+              ← Change email
             </button>
           </div>
         )}
