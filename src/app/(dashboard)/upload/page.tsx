@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 type Phase = 'idle' | 'uploading' | 'extracting' | 'done' | 'error'
@@ -21,17 +22,34 @@ const LEVEL_STYLE: Record<string, { icon: string; color: string }> = {
   asteroid: { icon: '☄️', color: 'text-zinc-400' },
 }
 
+function stageLabel(progress: number): string {
+  if (progress < 25) return 'Reading your notes...'
+  if (progress < 70) return 'Claude is identifying concepts and relationships...'
+  if (progress < 100) return 'Building your knowledge graph...'
+  return 'Done'
+}
+
 export default function UploadPage() {
   const [phase, setPhase] = useState<Phase>('idle')
   const [fileName, setFileName] = useState('')
   const [error, setError] = useState('')
+  const [progress, setProgress] = useState(0)
+  const [docId, setDocId] = useState<string | null>(null)
   const [result, setResult] = useState<Result | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  function stopPolling() {
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+  }
 
   async function handleFile(file: File) {
     setError('')
     setResult(null)
+    setProgress(0)
 
-    // Client-side validation (no request is sent if it fails)
     if (!file.name.toLowerCase().endsWith('.md')) {
       setError('Only Markdown (.md) files are supported')
       setPhase('error')
@@ -68,32 +86,48 @@ export default function UploadPage() {
     })
     if (!docRes.ok) { setError('Failed to create document record'); setPhase('error'); return }
     const { id } = await docRes.json()
+    setDocId(id)
 
-    // 3. Trigger Claude extraction
+    // 3. Trigger extraction and poll status for staged progress
     setPhase('extracting')
-    const extractRes = await fetch(`/api/documents/${id}/extract`, { method: 'POST' })
-    const extractData = await extractRes.json()
-    if (!extractRes.ok) {
-      setError(`Extraction failed: ${extractData.error ?? 'Unknown error'}`)
-      setPhase('error')
-      return
-    }
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/documents/${id}/status`)
+        if (!res.ok) return
+        const s = await res.json()
+        setProgress(s.progress ?? 0)
+      } catch {
+        // transient polling failures are fine
+      }
+    }, 1500)
 
-    setResult(extractData)
-    setPhase('done')
+    try {
+      const extractRes = await fetch(`/api/documents/${id}/extract`, { method: 'POST' })
+      const extractData = await extractRes.json()
+      stopPolling()
+      if (!extractRes.ok) {
+        setError(`Extraction failed: ${extractData.error ?? 'Unknown error'}`)
+        setPhase('error')
+        return
+      }
+      setProgress(100)
+      setResult(extractData)
+      setPhase('done')
+    } catch {
+      stopPolling()
+      setError('Extraction request failed — check your connection and try again')
+      setPhase('error')
+    }
   }
 
   const busy = phase === 'uploading' || phase === 'extracting'
 
   return (
-    <div className="min-h-screen bg-zinc-950 py-12 px-4">
+    <div className="py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <img src="/icon.svg" alt="NeuronMap" className="w-10 h-10 rounded-xl" />
-          <div>
-            <h1 className="text-2xl font-bold text-white leading-none">Upload study material</h1>
-            <p className="text-sm text-zinc-500 mt-1">Upload Markdown notes and AI extracts the knowledge nodes</p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-white leading-none">Upload study material</h1>
+          <p className="text-sm text-zinc-500 mt-2">Upload Markdown notes and AI extracts the knowledge nodes</p>
         </div>
 
         <label
@@ -113,7 +147,7 @@ export default function UploadPage() {
           />
           <div className="text-4xl mb-3">📝</div>
           <p className="text-zinc-300 font-medium">Click to choose a Markdown file</p>
-          <p className="text-xs text-zinc-600 mt-1">Phase 1 supports .md only, up to 5MB</p>
+          <p className="text-xs text-zinc-600 mt-1">.md only, up to 5MB</p>
         </label>
 
         {phase === 'uploading' && (
@@ -121,10 +155,21 @@ export default function UploadPage() {
             <span className="animate-pulse">●</span> Uploading {fileName}...
           </p>
         )}
+
         {phase === 'extracting' && (
-          <p className="mt-6 text-sm text-violet-400 flex items-center gap-2">
-            <span className="animate-pulse">●</span> Claude is analyzing the notes and extracting knowledge nodes...
-          </p>
+          <div className="mt-6">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-violet-400">{stageLabel(progress)}</span>
+              <span className="text-zinc-500">{progress}%</span>
+            </div>
+            <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-violet-500 rounded-full transition-all duration-700"
+                style={{ width: `${Math.max(progress, 5)}%` }}
+              />
+            </div>
+            <p className="text-xs text-zinc-600 mt-2">Usually takes 20-40 seconds</p>
+          </div>
         )}
 
         {phase === 'error' && (
@@ -135,13 +180,18 @@ export default function UploadPage() {
 
         {phase === 'done' && result && (
           <div className="mt-8">
-            <div className="flex items-center gap-4 mb-4 text-sm">
-              <span className="text-green-400 font-medium">✓ Extraction complete</span>
-              <span className="text-zinc-400">{result.nodeCount} nodes · {result.edgeCount} relationships</span>
-              {result.usage && (
-                <span className="text-zinc-600">
-                  {result.usage.input_tokens + result.usage.output_tokens} tokens
-                </span>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-green-400 font-medium">✓ Extraction complete</span>
+                <span className="text-zinc-400">{result.nodeCount} nodes · {result.edgeCount} relationships</span>
+              </div>
+              {docId && (
+                <Link
+                  href={`/graph/${docId}`}
+                  className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg px-5 py-2.5 transition-colors"
+                >
+                  View your universe →
+                </Link>
               )}
             </div>
             <div className="space-y-2">

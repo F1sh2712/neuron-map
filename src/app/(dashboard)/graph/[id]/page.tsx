@@ -23,16 +23,13 @@ export default async function GraphPage({ params }: { params: Promise<{ id: stri
   })
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-900">
-        <div className="flex items-center gap-3">
-          <img src="/icon.svg" alt="NeuronMap" className="w-8 h-8 rounded-lg" />
-          <div>
-            <h1 className="text-lg font-bold text-white leading-none">{document.title}</h1>
-            <p className="text-xs text-zinc-500 mt-1">
-              {nodes.length} nodes · {edges.length} relationships
-            </p>
-          </div>
+    <div className="flex-1 min-h-0 flex flex-col">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-zinc-900">
+        <div>
+          <h1 className="text-lg font-bold text-white leading-none">{document.title}</h1>
+          <p className="text-xs text-zinc-500 mt-1">
+            {nodes.length} nodes · {edges.length} relationships
+          </p>
         </div>
         <div className="flex items-center gap-4 text-xs text-zinc-500">
           <span>⭐ star</span>
