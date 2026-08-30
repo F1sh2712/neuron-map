@@ -1,6 +1,8 @@
 # NeuronMap
 
-NeuronMap is a student project for exploring AI-assisted learning tools. The product goal is to turn structured study notes into a knowledge map that shows concepts and their relationships.
+**Live demo: [neuron-map-six.vercel.app](https://neuron-map-six.vercel.app)**
+
+NeuronMap turns study notes into a living knowledge universe: upload Markdown notes, Claude AI extracts the concepts and how they relate, and the result renders as an animated cosmic graph — stars (core topics) orbited by planets (sub-topics) orbited by asteroids (details).
 
 The Phase 1 MVP is **Markdown-first**:
 
@@ -37,22 +39,25 @@ Completed:
 - Markdown (.md) upload to Supabase Storage, with client-side type and 5 MB size validation.
 - Claude knowledge extraction from Markdown: concept nodes tiered as star / planet / asteroid by heading depth, plus typed, weighted relationship edges. Verified on a sample (10 correctly tiered nodes, 16 edges).
 - Cosmic graph view: a custom Canvas + requestAnimationFrame orbital renderer (stars anchored, planets orbit stars, asteroids orbit planets), with drag-to-reattach, click-to-inspect, and hover highlight.
+- Document list dashboard with navigation shell, status chips and "View graph" links.
+- Staged extraction progress (status polling API + progress bar).
+- Private storage bucket with own-folder RLS; the server reads files via the SDK, never by URL (no SSRF surface).
+- Extraction transform unit tests (`npm test`).
+- Production deployment on Vercel: [neuron-map-six.vercel.app](https://neuron-map-six.vercel.app).
 - Codebase written in English throughout (UI, prompts, comments, API messages).
 - Build, TypeScript, and lint checks currently pass.
 
 Partially complete:
 
-- Extraction is a single synchronous Claude call; large documents need an async job + status so it stays within the serverless timeout.
+- Extraction runs as one Claude call within a 60s function budget; very large documents will need a queued/async job.
 - A clearer "study" view (skill-tree layout) is in visual design; the cosmic view is the current default.
 
 Not complete:
 
-- Document list and detail pages.
-- Status polling API.
-- Skill-tree learning view (implementation).
+- Document detail page and document deletion.
+- Skill-tree learning view (implementation; visual direction settled).
 - Cross-file knowledge merging (embeddings / pgvector).
 - AI chat.
-- Preview deployment.
 
 ## Tech Stack
 
@@ -129,8 +134,17 @@ evidence/logs/2026-07-04-verification.md
 4. Cross-file knowledge merging: embeddings + pgvector to connect the same concept across different uploads.
 5. Save manual test evidence under `evidence/`.
 
+## How This Was Built
+
+This project is built with AI-supervised engineering: I direct Claude Code under written constraints ([CLAUDE.md](CLAUDE.md), [AGENTS.md](AGENTS.md)), review every line before it lands, and log decisions in weekly reports under `docs/reports/`. The judgment calls are documented and mine — for example:
+
+- **Markdown-first over PDF parsing**: semantic headings give deterministic star/planet/asteroid tiering at near-zero cost, while Claude-native PDF reading cost ~$0.31/lecture and could not reliably recover heading hierarchy. The PDF prototype is archived as a future input adapter.
+- **Custom Canvas renderer over react-force-graph**: force-directed layouts cannot express orbital motion, which the cosmic metaphor requires.
+- **Deferring embeddings/pgvector**: after studying how Resume-Matcher shipped without vector search, cross-document concept merging is postponed until it can share infrastructure with AI chat.
+
 ## Security Notes
 
 - Never commit `.env`, `.env.local`, database URLs, API keys, or real user data.
 - Use fake notes and test accounts for screenshots and evidence.
 - Keep AI calls server-side.
+- Storage is a private bucket with row-level security: users can only read and write their own folder.

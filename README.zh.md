@@ -1,6 +1,8 @@
 # NeuronMap
 
-NeuronMap 是一个 RBT AI Training Program 学生项目，用来探索 AI 如何帮助学生把学习笔记整理成知识图谱。
+**在线体验：[neuron-map-six.vercel.app](https://neuron-map-six.vercel.app)**
+
+NeuronMap 把学习笔记变成一个"知识宇宙"：上传 Markdown 笔记，Claude AI 提取概念和它们之间的关系，渲染成会动的宇宙图谱——恒星（核心主题）被行星（子主题）环绕，行星又被陨石（细节）环绕。
 
 Phase 1 MVP 采用 **Markdown-first** 路线：
 
@@ -37,22 +39,25 @@ Markdown 比 PDF 更适合 Phase 1：
 - Markdown（.md）上传至 Supabase Storage，含客户端文件类型和 5MB 大小校验。
 - Claude 从 Markdown 提取知识：概念节点按标题深度分为 star / planet / asteroid 三层，并生成带类型和权重的关系边。已用样例验证（10 个层级正确的节点，16 条边）。
 - 宇宙图谱视图：自定义 Canvas + requestAnimationFrame 轨道动画（恒星锚定、行星绕恒星、陨石绕行星），支持拖拽重新归属、点击查看详情、悬停高亮。
+- 文档列表 dashboard + 导航栏（状态标签、View graph 直达）。
+- 分阶段提取进度（状态轮询 API + 进度条）。
+- 私有 Storage bucket + 只能读写自己文件夹的 RLS；服务端经 SDK 读文件，不再 fetch URL（消除 SSRF）。
+- 提取逻辑单元测试（`npm test`）。
+- Vercel 生产部署：[neuron-map-six.vercel.app](https://neuron-map-six.vercel.app)。
 - 代码全部英文（UI、prompt、注释、API 消息）。
 - TypeScript、lint、production build 当前可以通过。
 
 部分完成：
 
-- 提取目前是单次同步 Claude 调用；大文档需要异步任务 + 状态查询以避免 serverless 超时。
-- 更清晰的“学习”视图（技能树布局）正在做视觉设计；宇宙视图是当前默认。
+- 提取是 60 秒函数预算内的单次 Claude 调用；超大文档以后需要队列/异步任务。
+- 更清晰的“学习”视图（技能树布局）视觉方向已定；宇宙视图是当前默认。
 
 未完成：
 
-- 文档列表和文档详情页。
-- 状态轮询 API。
+- 文档详情页和文档删除。
 - 技能树学习视图（实现）。
 - 跨文件知识合并（embeddings / pgvector）。
 - AI chat。
-- 线上 preview 部署。
 
 ## 技术栈
 
