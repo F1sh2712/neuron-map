@@ -75,14 +75,11 @@ export default function UploadPage() {
       .upload(path, file, { contentType: 'text/markdown' })
     if (uploadErr) { setError(`Upload failed: ${uploadErr.message}`); setPhase('error'); return }
 
-    const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
-    const fileUrl = urlData.publicUrl
-
-    // 2. Create the Document record
+    // 2. Create the Document record — store the private storage path, not a public URL
     const docRes = await fetch('/api/documents', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: file.name.replace(/\.md$/i, ''), fileUrl }),
+      body: JSON.stringify({ title: file.name.replace(/\.md$/i, ''), storagePath: path }),
     })
     if (!docRes.ok) { setError('Failed to create document record'); setPhase('error'); return }
     const { id } = await docRes.json()

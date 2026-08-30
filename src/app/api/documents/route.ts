@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  let body: { title?: unknown; fileUrl?: unknown }
+  let body: { title?: unknown; storagePath?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -16,21 +16,23 @@ export async function POST(req: Request) {
   }
 
   const title = typeof body.title === 'string' ? body.title.trim().slice(0, 200) : ''
-  const fileUrl = typeof body.fileUrl === 'string' ? body.fileUrl : ''
+  const storagePath = typeof body.storagePath === 'string' ? body.storagePath : ''
 
-  if (!title || !fileUrl) {
-    return NextResponse.json({ error: 'title and fileUrl are required' }, { status: 400 })
+  if (!title || !storagePath) {
+    return NextResponse.json({ error: 'title and storagePath are required' }, { status: 400 })
   }
 
-  // SSRF guard: only accept URLs pointing at this user's own folder in our
-  // Supabase storage bucket — the server later fetches this URL.
-  const allowedPrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/documents/${user.id}/`
-  if (!fileUrl.startsWith(allowedPrefix) || !fileUrl.toLowerCase().endsWith('.md')) {
-    return NextResponse.json({ error: 'fileUrl must point to your own uploaded .md file' }, { status: 400 })
+  // Only accept a path inside this user's own folder in the documents bucket.
+  // The server later downloads this path via the Supabase SDK (private bucket),
+  // so no URL is ever fetched — closes the SSRF class entirely.
+  const validPath = new RegExp(`^${user.id}/[\\w.-]+\\.md$`, 'i')
+  if (!validPath.test(storagePath)) {
+    return NextResponse.json({ error: 'storagePath must be a .md file in your own folder' }, { status: 400 })
   }
 
+  // Stored in the fileUrl column (schema name predates the private-bucket move).
   const document = await db.document.create({
-    data: { userId: user.id, title, fileUrl, status: 'PENDING' },
+    data: { userId: user.id, title, fileUrl: storagePath, status: 'PENDING' },
   })
 
   return NextResponse.json({ id: document.id })

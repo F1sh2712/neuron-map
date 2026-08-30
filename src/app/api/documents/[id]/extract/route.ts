@@ -40,11 +40,18 @@ export async function POST(
   }
 
   try {
-    const mdRes = await fetch(document.fileUrl)
-    if (!mdRes.ok) throw new Error(`Failed to read Markdown file: ${mdRes.status}`)
-    const raw = await mdRes.arrayBuffer()
-    if (raw.byteLength > MAX_MD_BYTES) throw new Error('Markdown file exceeds the 5MB limit')
-    const markdown = new TextDecoder('utf-8').decode(raw)
+    // fileUrl holds a storage path (new records); older records stored a full
+    // public URL — strip it down to the path so both keep working.
+    const storagePath = document.fileUrl.replace(/^https?:\/\/[^]*\/object\/public\/documents\//, '')
+
+    // Download via the SDK with the user's session: the bucket is private and
+    // RLS only allows reading your own folder. No server-side URL fetch (no SSRF).
+    const { data: blob, error: dlErr } = await supabase.storage
+      .from('documents')
+      .download(storagePath)
+    if (dlErr || !blob) throw new Error(`Failed to read Markdown file: ${dlErr?.message ?? 'not found'}`)
+    if (blob.size > MAX_MD_BYTES) throw new Error('Markdown file exceeds the 5MB limit')
+    const markdown = await blob.text()
     if (!markdown.trim()) throw new Error('Markdown file is empty')
 
     await db.document.update({ where: { id }, data: { extractProgress: 25 } })
