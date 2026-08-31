@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { collectContainsDescendants } from '@/lib/extraction'
 
 export type GraphNode = {
   id: string
@@ -34,6 +36,9 @@ const STYLE: Record<string, { color: string; glow: string; r: number }> = {
   asteroid: { color: '#a1a1aa', glow: 'rgba(161,161,170,0.35)', r: 8 },
 }
 
+const MIN_ZOOM = 0.3
+const MAX_ZOOM = 3
+
 function styleFor(level: string) {
   return STYLE[level] ?? STYLE.asteroid
 }
@@ -41,7 +46,11 @@ function styleFor(level: string) {
 export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEdge[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [selected, setSelected] = useState<GraphNode | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const selectedRef = useRef<GraphNode | null>(null)
+  // Camera lives in a ref so the view survives data refreshes (e.g. after a delete).
+  const cameraRef = useRef({ scale: 1, ox: 0, oy: 0 })
+  const router = useRouter()
 
   useEffect(() => {
     selectedRef.current = selected
@@ -63,17 +72,15 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       canvas.height = H * dpr
       canvas.style.width = `${W}px`
       canvas.style.height = `${H}px`
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     resize()
 
-    // --- Build the orbital layout from nodes + edges ---
+    // --- Build the orbital layout from nodes + edges (world coordinates) ---
     const byId = new Map(nodes.map((n) => [n.id, n]))
     const stars = nodes.filter((n) => n.level === 'star')
     const planets = nodes.filter((n) => n.level === 'planet')
     const asteroids = nodes.filter((n) => n.level === 'asteroid')
 
-    // Find a parent of a given level for a node via a "contains" (or any) edge
     function findParent(nodeId: string, parentLevel: string): string | null {
       const contains = edges.find(
         (e) => e.toNodeId === nodeId && byId.get(e.fromNodeId)?.level === parentLevel && e.relationType === 'contains'
@@ -88,7 +95,6 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
     const cx = W / 2
     const cy = H / 2
 
-    // Stars: fixed positions (single star centered, otherwise spread on a ring)
     const starRing = Math.min(W, H) * 0.24
     stars.forEach((n, i) => {
       const angle = (i / Math.max(stars.length, 1)) * Math.PI * 2 - Math.PI / 2
@@ -99,7 +105,6 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       bodyById.set(n.id, b)
     })
 
-    // Planets: orbit their star
     const planetsByStar = new Map<string, GraphNode[]>()
     planets.forEach((n, i) => {
       let starId = findParent(n.id, 'star')
@@ -132,7 +137,6 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       })
     })
 
-    // Asteroids: orbit their planet (fallback: orbit a star directly)
     const childrenByParent = new Map<string, GraphNode[]>()
     asteroids.forEach((n, i) => {
       let parentId = findParent(n.id, 'planet')
@@ -165,7 +169,6 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       })
     })
 
-    // Starfield background (static)
     const stardust = Array.from({ length: 120 }, () => ({
       x: Math.random(),
       y: Math.random(),
@@ -174,17 +177,28 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
     }))
 
     // --- Interaction state ---
+    const cam = cameraRef.current
     let dragging: Body | null = null
+    let panning = false
     let hovered: Body | null = null
     let downPos: { x: number; y: number } | null = null
+    let lastScreen: { x: number; y: number } | null = null
 
-    function bodyAt(mx: number, my: number): Body | null {
-      // Prefer smaller bodies (asteroids) on top
+    function toScreen(e: MouseEvent) {
+      const rect = canvas.getBoundingClientRect()
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    }
+    function toWorld(s: { x: number; y: number }) {
+      return { x: (s.x - cam.ox) / cam.scale, y: (s.y - cam.oy) / cam.scale }
+    }
+
+    function bodyAt(wx: number, wy: number): Body | null {
       let best: Body | null = null
       let bestR = Infinity
       for (const b of bodies) {
-        const d = Math.hypot(b.x - mx, b.y - my)
-        if (d <= b.r + 4 && b.r < bestR) {
+        const d = Math.hypot(b.x - wx, b.y - wy)
+        // hit radius grows slightly when zoomed out so small bodies stay clickable
+        if (d <= b.r + 4 / cam.scale && b.r < bestR) {
           best = b
           bestR = b.r
         }
@@ -192,34 +206,10 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       return best
     }
 
-    function toLocal(e: MouseEvent) {
-      const rect = canvas.getBoundingClientRect()
-      return { x: e.clientX - rect.left, y: e.clientY - rect.top }
-    }
-
-    function onDown(e: MouseEvent) {
-      const p = toLocal(e)
-      downPos = p
-      const b = bodyAt(p.x, p.y)
-      if (b) dragging = b
-    }
-    function onMove(e: MouseEvent) {
-      const p = toLocal(e)
-      if (dragging) {
-        dragging.pinned = true
-        dragging.x = p.x
-        dragging.y = p.y
-      } else {
-        hovered = bodyAt(p.x, p.y)
-        canvas.style.cursor = hovered ? 'pointer' : 'default'
-      }
-    }
-    // On release, re-attach the dragged body to the nearest larger body and
-    // resume orbiting it (asteroid -> nearest planet, planet -> nearest star).
     function reattach(b: Body) {
       const parentLevel =
         b.node.level === 'asteroid' ? 'planet' : b.node.level === 'planet' ? 'star' : null
-      if (!parentLevel) return // a star stays where it was dropped
+      if (!parentLevel) return
       let nearest: Body | null = null
       let nd = Infinity
       for (const o of bodies) {
@@ -237,33 +227,70 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       b.pinned = false
     }
 
+    function onDown(e: MouseEvent) {
+      const s = toScreen(e)
+      downPos = s
+      lastScreen = s
+      const b = bodyAt(toWorld(s).x, toWorld(s).y)
+      if (b) dragging = b
+      else panning = true
+    }
+    function onMove(e: MouseEvent) {
+      const s = toScreen(e)
+      if (dragging) {
+        dragging.pinned = true
+        const w = toWorld(s)
+        dragging.x = w.x
+        dragging.y = w.y
+      } else if (panning && lastScreen) {
+        cam.ox += s.x - lastScreen.x
+        cam.oy += s.y - lastScreen.y
+      } else {
+        const w = toWorld(s)
+        hovered = bodyAt(w.x, w.y)
+        canvas.style.cursor = hovered ? 'pointer' : 'grab'
+      }
+      lastScreen = s
+    }
     function onUp(e: MouseEvent) {
-      const p = toLocal(e)
-      const moved = downPos && Math.hypot(p.x - downPos.x, p.y - downPos.y) >= 4
+      const s = toScreen(e)
+      const moved = downPos && Math.hypot(s.x - downPos.x, s.y - downPos.y) >= 4
       if (dragging && moved) {
         reattach(dragging)
       } else if (!moved) {
-        // A click (not a drag) selects/deselects
-        const b = bodyAt(p.x, p.y)
+        const w = toWorld(s)
+        const b = bodyAt(w.x, w.y)
         setSelected(b ? b.node : null)
       }
       dragging = null
+      panning = false
       downPos = null
+    }
+    function onWheel(e: WheelEvent) {
+      e.preventDefault()
+      const s = toScreen(e)
+      const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1
+      const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, cam.scale * factor))
+      // zoom anchored at the cursor so the point under the mouse stays put
+      cam.ox = s.x - ((s.x - cam.ox) / cam.scale) * next
+      cam.oy = s.y - ((s.y - cam.oy) / cam.scale) * next
+      cam.scale = next
     }
 
     canvas.addEventListener('mousedown', onDown)
     canvas.addEventListener('mousemove', onMove)
+    canvas.addEventListener('wheel', onWheel, { passive: false })
     window.addEventListener('mouseup', onUp)
     window.addEventListener('resize', resize)
 
     // --- Render loop ---
     let raf = 0
     function frame() {
+      // screen space: background + starfield
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, W, H)
       ctx.fillStyle = '#09090b'
       ctx.fillRect(0, 0, W, H)
-
-      // starfield
       for (const s of stardust) {
         ctx.globalAlpha = s.a
         ctx.fillStyle = '#ffffff'
@@ -273,7 +300,9 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       }
       ctx.globalAlpha = 1
 
-      // advance orbits + compute positions
+      // world space: apply camera
+      ctx.setTransform(dpr * cam.scale, 0, 0, dpr * cam.scale, dpr * cam.ox, dpr * cam.oy)
+
       for (const b of bodies) {
         if (b.parent && !b.pinned) {
           b.angle += b.orbitSpeed
@@ -282,9 +311,8 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
         }
       }
 
-      // orbit rings
       ctx.strokeStyle = 'rgba(255,255,255,0.05)'
-      ctx.lineWidth = 1
+      ctx.lineWidth = 1 / cam.scale
       for (const b of bodies) {
         if (b.parent && !b.pinned) {
           ctx.beginPath()
@@ -293,25 +321,22 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
         }
       }
 
-      // edges
       for (const e of edges) {
         const a = bodyById.get(e.fromNodeId)
         const c = bodyById.get(e.toNodeId)
         if (!a || !c) continue
         ctx.strokeStyle = e.relationType === 'contains' ? 'rgba(255,255,255,0.06)' : 'rgba(139,92,246,0.18)'
-        ctx.lineWidth = e.relationType === 'contains' ? 1 : 1.2
+        ctx.lineWidth = (e.relationType === 'contains' ? 1 : 1.2) / cam.scale
         ctx.beginPath()
         ctx.moveTo(a.x, a.y)
         ctx.lineTo(c.x, c.y)
         ctx.stroke()
       }
 
-      // bodies
       for (const b of bodies) {
         const st = styleFor(b.node.level)
         const isSel = selectedRef.current?.id === b.node.id
         const isHov = hovered?.node.id === b.node.id
-        // glow
         const glowR = b.r * (b.node.level === 'star' ? 3 : 2.2)
         const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, glowR)
         grad.addColorStop(0, st.glow)
@@ -320,20 +345,18 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
         ctx.beginPath()
         ctx.arc(b.x, b.y, glowR, 0, Math.PI * 2)
         ctx.fill()
-        // body
         ctx.fillStyle = st.color
         ctx.beginPath()
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2)
         ctx.fill()
         if (isSel || isHov) {
           ctx.strokeStyle = '#ffffff'
-          ctx.lineWidth = 2
+          ctx.lineWidth = 2 / cam.scale
           ctx.beginPath()
           ctx.arc(b.x, b.y, b.r + 3, 0, Math.PI * 2)
           ctx.stroke()
         }
-        // label for stars/planets, and hovered/selected asteroids
-        if (b.node.level !== 'asteroid' || isSel || isHov) {
+        if (b.node.level !== 'asteroid' || isSel || isHov || cam.scale > 1.5) {
           ctx.fillStyle = 'rgba(255,255,255,0.85)'
           ctx.font = `${b.node.level === 'star' ? 13 : 11}px system-ui, sans-serif`
           ctx.textAlign = 'center'
@@ -349,14 +372,38 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       cancelAnimationFrame(raf)
       canvas.removeEventListener('mousedown', onDown)
       canvas.removeEventListener('mousemove', onMove)
+      canvas.removeEventListener('wheel', onWheel)
       window.removeEventListener('mouseup', onUp)
       window.removeEventListener('resize', resize)
     }
   }, [nodes, edges])
 
+  async function deleteSelected() {
+    if (!selected) return
+    const subtree = collectContainsDescendants(selected.id, edges)
+    const descendants = subtree.length - 1
+    const msg =
+      descendants > 0
+        ? `Delete "${selected.title}" and the ${descendants} node(s) it contains? This cannot be undone.`
+        : `Delete "${selected.title}" and its connections? This cannot be undone.`
+    if (!window.confirm(msg)) return
+    setDeleting(true)
+    const res = await fetch(`/api/nodes/${selected.id}`, { method: 'DELETE' })
+    setDeleting(false)
+    if (!res.ok) {
+      window.alert('Failed to delete the node, please try again.')
+      return
+    }
+    setSelected(null)
+    router.refresh()
+  }
+
   return (
     <div className="relative w-full h-full">
       <canvas ref={canvasRef} className="block w-full h-full" />
+      <div className="absolute bottom-3 left-4 text-xs text-zinc-600 pointer-events-none">
+        Scroll to zoom · drag space to pan · drag a body to move it
+      </div>
       {selected && (
         <div className="absolute top-4 right-4 w-72 bg-zinc-900/95 border border-zinc-800 rounded-xl p-4 shadow-xl backdrop-blur">
           <div className="flex items-center gap-2 mb-2">
@@ -368,12 +415,21 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
           {selected.sourceHeading && (
             <p className="text-xs text-zinc-600 mt-3">Source: {selected.sourceHeading}</p>
           )}
-          <button
-            onClick={() => setSelected(null)}
-            className="mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
-            Close
-          </button>
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              onClick={() => setSelected(null)}
+              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              Close
+            </button>
+            <button
+              onClick={deleteSelected}
+              disabled={deleting}
+              className="text-xs text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
+            >
+              {deleting ? 'Deleting...' : 'Delete node'}
+            </button>
+          </div>
         </div>
       )}
     </div>

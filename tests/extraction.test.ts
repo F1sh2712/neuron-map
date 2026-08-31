@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { buildGraphRows, type ExtractedNode, type ExtractedEdge } from '../src/lib/extraction'
+import {
+  buildGraphRows,
+  collectContainsDescendants,
+  type ExtractedNode,
+  type ExtractedEdge,
+} from '../src/lib/extraction'
 
 const DOC = 'doc-1'
 
@@ -64,6 +69,32 @@ describe('buildGraphRows', () => {
       relationType: 'related',
       weight: 0.5,
     })
+  })
+
+  it('collects the full contains-subtree of a star, and only that', () => {
+    // star s1 -> planets p1,p2; p1 -> asteroids a1,a2; another star s2 -> p3
+    // "related" edges must NOT pull nodes into the subtree
+    const edges = [
+      { fromNodeId: 's1', toNodeId: 'p1', relationType: 'contains' },
+      { fromNodeId: 's1', toNodeId: 'p2', relationType: 'contains' },
+      { fromNodeId: 'p1', toNodeId: 'a1', relationType: 'contains' },
+      { fromNodeId: 'p1', toNodeId: 'a2', relationType: 'contains' },
+      { fromNodeId: 's2', toNodeId: 'p3', relationType: 'contains' },
+      { fromNodeId: 'p2', toNodeId: 'p3', relationType: 'related' },
+    ]
+    const subtree = collectContainsDescendants('s1', edges)
+    expect(subtree.sort()).toEqual(['a1', 'a2', 'p1', 'p2', 's1'])
+
+    // deleting a leaf touches only itself
+    expect(collectContainsDescendants('a1', edges)).toEqual(['a1'])
+  })
+
+  it('survives a containment cycle without infinite looping', () => {
+    const edges = [
+      { fromNodeId: 'x', toNodeId: 'y', relationType: 'contains' },
+      { fromNodeId: 'y', toNodeId: 'x', relationType: 'contains' },
+    ]
+    expect(collectContainsDescendants('x', edges).sort()).toEqual(['x', 'y'])
   })
 
   it('handles non-array input without throwing', () => {

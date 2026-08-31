@@ -30,6 +30,35 @@ export type EdgeRow = {
 const VALID_LEVELS = ['star', 'planet', 'asteroid']
 
 /**
+ * Collects a node and all its semantic descendants by walking "contains"
+ * edges downward (star -> planets -> asteroids). Only real containment
+ * edges count — visually fallback-attached bodies are not descendants.
+ */
+export function collectContainsDescendants(
+  rootId: string,
+  edges: { fromNodeId: string; toNodeId: string; relationType: string }[]
+): string[] {
+  const childrenOf = new Map<string, string[]>()
+  for (const e of edges) {
+    if (e.relationType !== 'contains') continue
+    const list = childrenOf.get(e.fromNodeId) ?? []
+    list.push(e.toNodeId)
+    childrenOf.set(e.fromNodeId, list)
+  }
+  const result: string[] = []
+  const seen = new Set<string>()
+  const queue = [rootId]
+  while (queue.length > 0) {
+    const id = queue.shift()!
+    if (seen.has(id)) continue
+    seen.add(id)
+    result.push(id)
+    for (const child of childrenOf.get(id) ?? []) queue.push(child)
+  }
+  return result
+}
+
+/**
  * Turns the model's raw tool output into DB-ready rows.
  * Pure and deterministic (id generation injected) so it is unit-testable:
  * skips malformed nodes, coerces invalid levels, drops edges that reference

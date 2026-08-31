@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
+import { DeleteDocumentButton } from '@/components/DeleteDocumentButton'
 
 const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
   PENDING: { label: 'Pending', cls: 'text-zinc-400 bg-zinc-800' },
@@ -74,14 +75,17 @@ export default async function DashboardPage() {
                     {doc._count.nodes} nodes · {new Date(doc.createdAt).toLocaleDateString('en-AU')}
                   </p>
                 </div>
-                {ready && (
-                  <Link
-                    href={`/graph/${doc.id}`}
-                    className="flex-none text-sm text-violet-400 hover:text-violet-300 font-medium transition-colors"
-                  >
-                    View graph →
-                  </Link>
-                )}
+                <div className="flex-none flex items-center gap-4">
+                  {ready && (
+                    <Link
+                      href={`/graph/${doc.id}`}
+                      className="text-sm text-violet-400 hover:text-violet-300 font-medium transition-colors"
+                    >
+                      View graph →
+                    </Link>
+                  )}
+                  <DeleteDocumentButton id={doc.id} title={doc.title} />
+                </div>
               </div>
             )
           })}
