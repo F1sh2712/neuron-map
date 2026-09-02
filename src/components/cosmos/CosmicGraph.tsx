@@ -199,6 +199,7 @@ export function CosmicGraph({
     let hovered: Body | null = null
     let downPos: { x: number; y: number } | null = null
     let lastScreen: { x: number; y: number } | null = null
+    let lastPrefetched: string | null = null
 
     function toScreen(e: MouseEvent) {
       const rect = canvas.getBoundingClientRect()
@@ -206,6 +207,12 @@ export function CosmicGraph({
     }
     function toWorld(s: { x: number; y: number }) {
       return { x: (s.x - cam.ox) / cam.scale, y: (s.y - cam.oy) / cam.scale }
+    }
+    // Keep at least 100px of the world visible so panning can never lose the map.
+    function clampCam() {
+      const M = 100
+      cam.ox = Math.min(W - M, Math.max(M - W * cam.scale, cam.ox))
+      cam.oy = Math.min(H - M, Math.max(M - H * cam.scale, cam.oy))
     }
 
     function bodyAt(wx: number, wy: number): Body | null {
@@ -261,10 +268,16 @@ export function CosmicGraph({
       } else if (panning && lastScreen) {
         cam.ox += s.x - lastScreen.x
         cam.oy += s.y - lastScreen.y
+        clampCam()
       } else {
         const w = toWorld(s)
         hovered = bodyAt(w.x, w.y)
         canvas.style.cursor = hovered ? 'pointer' : 'grab'
+        // Prefetch the system route on hover so the click-through feels instant.
+        if (hovered && hovered.node.level !== 'asteroid' && lastPrefetched !== hovered.node.id) {
+          lastPrefetched = hovered.node.id
+          router.prefetch(`/system/${hovered.node.id}`)
+        }
       }
       lastScreen = s
     }
@@ -276,7 +289,12 @@ export function CosmicGraph({
       } else if (!moved) {
         const w = toWorld(s)
         const b = bodyAt(w.x, w.y)
-        setSelected(b ? b.node : null)
+        if (b && b.node.level !== 'asteroid') {
+          // Stars and planets drill into their system view
+          router.push(`/system/${b.node.id}`)
+        } else {
+          setSelected(b ? b.node : null)
+        }
       }
       dragging = null
       panning = false
@@ -291,6 +309,7 @@ export function CosmicGraph({
       cam.ox = s.x - ((s.x - cam.ox) / cam.scale) * next
       cam.oy = s.y - ((s.y - cam.oy) / cam.scale) * next
       cam.scale = next
+      clampCam()
     }
 
     canvas.addEventListener('mousedown', onDown)

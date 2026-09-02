@@ -21,6 +21,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Link href="/dashboard" className="text-zinc-400 hover:text-white transition-colors">
               Documents
             </Link>
+            <Link href="/universe" className="text-zinc-400 hover:text-white transition-colors">
+              Universe
+            </Link>
             <Link href="/upload" className="text-zinc-400 hover:text-white transition-colors">
               Upload
             </Link>
