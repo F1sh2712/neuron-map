@@ -105,26 +105,35 @@ export async function POST(
 
     // Cross-document linking: match new nodes against this user's other
     // documents by normalized title and record same-concept links.
-    const existingNodes = await db.knowledgeNode.findMany({
-      where: { document: { userId: user.id }, documentId: { not: id } },
-      select: { id: true, title: true },
-    })
-    const links = findTitleMatches(nodeRows, existingNodes)
-    if (links.length > 0) {
-      await db.nodeLink.createMany({ data: links, skipDuplicates: true })
+    // Best-effort by design — extraction has already succeeded, so a linking
+    // failure must not mark the document FAILED.
+    let linkCount = 0
+    let linkedTitles: string[] = []
+    try {
+      const existingNodes = await db.knowledgeNode.findMany({
+        where: { document: { userId: user.id }, documentId: { not: id } },
+        select: { id: true, title: true },
+      })
+      const links = findTitleMatches(nodeRows, existingNodes)
+      if (links.length > 0) {
+        await db.nodeLink.createMany({ data: links, skipDuplicates: true })
+      }
+      linkCount = links.length
+      linkedTitles = [
+        ...new Set(
+          links.map((l) => nodeRows.find((n) => n.id === l.fromNodeId)?.title).filter((t): t is string => !!t)
+        ),
+      ]
+      console.log(`[extract] cross-document links: ${linkCount} (${linkedTitles.join(', ')})`)
+    } catch (linkErr) {
+      console.error('[extract] cross-document linking failed (non-fatal):', linkErr)
     }
-    const linkedTitles = [
-      ...new Set(
-        links.map((l) => nodeRows.find((n) => n.id === l.fromNodeId)?.title).filter(Boolean)
-      ),
-    ]
-    console.log(`[extract] cross-document links: ${links.length} (${linkedTitles.join(', ')})`)
 
     return NextResponse.json({
       status: 'DONE',
       nodeCount: nodeRows.length,
       edgeCount: edgeRows.length,
-      crossLinks: { count: links.length, concepts: linkedTitles },
+      crossLinks: { count: linkCount, concepts: linkedTitles },
       nodes: nodeRows.map((n) => ({ title: n.title, level: n.level, summary: n.summary })),
       usage: message.usage,
     })
