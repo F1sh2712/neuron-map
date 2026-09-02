@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
   buildGraphRows,
   collectContainsDescendants,
+  findTitleMatches,
+  normalizeTitle,
   type ExtractedNode,
   type ExtractedEdge,
 } from '../src/lib/extraction'
@@ -95,6 +97,31 @@ describe('buildGraphRows', () => {
       { fromNodeId: 'y', toNodeId: 'x', relationType: 'contains' },
     ]
     expect(collectContainsDescendants('x', edges).sort()).toEqual(['x', 'y'])
+  })
+
+  it('normalizes titles case- and whitespace-insensitively', () => {
+    expect(normalizeTitle('  BFS ')).toBe('bfs')
+    expect(normalizeTitle('Graph   Traversal')).toBe('graph traversal')
+    expect(normalizeTitle('')).toBe('')
+  })
+
+  it('links same-titled concepts across documents, and only those', () => {
+    const newNodes = [
+      { id: 'new-1', title: 'BFS' },
+      { id: 'new-2', title: 'Dijkstra' },
+      { id: 'new-3', title: '' },
+    ]
+    const existing = [
+      { id: 'old-1', title: 'bfs' }, // case-insensitive match
+      { id: 'old-2', title: 'BFS' }, // second doc with the same concept
+      { id: 'old-3', title: "Dijkstra's Algorithm" }, // NOT an exact match — no link
+      { id: 'old-4', title: '' },
+    ]
+    const links = findTitleMatches(newNodes, existing)
+    expect(links).toEqual([
+      { fromNodeId: 'new-1', toNodeId: 'old-1' },
+      { fromNodeId: 'new-1', toNodeId: 'old-2' },
+    ])
   })
 
   it('handles non-array input without throwing', () => {

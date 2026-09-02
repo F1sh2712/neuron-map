@@ -10,6 +10,7 @@ type ResultNode = { title: string; level: string; summary: string }
 type Result = {
   nodeCount: number
   edgeCount: number
+  crossLinks?: { count: number; concepts: string[] }
   nodes: ResultNode[]
   usage?: { input_tokens: number; output_tokens: number }
 }
@@ -191,6 +192,18 @@ export default function UploadPage() {
                 </Link>
               )}
             </div>
+            {result.crossLinks && result.crossLinks.count > 0 && (
+              <div className="mb-4 bg-amber-950/30 border border-amber-900/50 rounded-lg px-4 py-3">
+                <p className="text-sm text-amber-300">
+                  🔗 {result.crossLinks.concepts.length} concept
+                  {result.crossLinks.concepts.length > 1 ? 's' : ''} also appear in your other
+                  documents: <span className="text-amber-200">{result.crossLinks.concepts.join(', ')}</span>
+                </p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  They are marked with a golden ring in the graph.
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               {result.nodes.map((n, i) => {
                 const style = LEVEL_STYLE[n.level] ?? LEVEL_STYLE.asteroid

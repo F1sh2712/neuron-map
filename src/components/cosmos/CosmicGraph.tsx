@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { collectContainsDescendants } from '@/lib/extraction'
 
@@ -16,6 +17,11 @@ export type GraphEdge = {
   toNodeId: string
   relationType: string
   weight: number
+}
+export type CrossLink = {
+  nodeId: string
+  documentId: string
+  documentTitle: string
 }
 
 type Body = {
@@ -43,7 +49,15 @@ function styleFor(level: string) {
   return STYLE[level] ?? STYLE.asteroid
 }
 
-export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEdge[] }) {
+export function CosmicGraph({
+  nodes,
+  edges,
+  crossLinks = [],
+}: {
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+  crossLinks?: CrossLink[]
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [selected, setSelected] = useState<GraphNode | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -168,6 +182,8 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
         bodyById.set(n.id, b)
       })
     })
+
+    const linkedIds = new Set(crossLinks.map((c) => c.nodeId))
 
     const stardust = Array.from({ length: 120 }, () => ({
       x: Math.random(),
@@ -349,6 +365,14 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
         ctx.beginPath()
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2)
         ctx.fill()
+        // golden ring: this concept also appears in another document
+        if (linkedIds.has(b.node.id)) {
+          ctx.strokeStyle = 'rgba(251,191,36,0.9)'
+          ctx.lineWidth = 1.5 / cam.scale
+          ctx.beginPath()
+          ctx.arc(b.x, b.y, b.r + 5, 0, Math.PI * 2)
+          ctx.stroke()
+        }
         if (isSel || isHov) {
           ctx.strokeStyle = '#ffffff'
           ctx.lineWidth = 2 / cam.scale
@@ -376,7 +400,7 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       window.removeEventListener('mouseup', onUp)
       window.removeEventListener('resize', resize)
     }
-  }, [nodes, edges])
+  }, [nodes, edges, crossLinks])
 
   async function deleteSelected() {
     if (!selected) return
@@ -415,6 +439,30 @@ export function CosmicGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
           {selected.sourceHeading && (
             <p className="text-xs text-zinc-600 mt-3">Source: {selected.sourceHeading}</p>
           )}
+          {(() => {
+            const appearsIn = [
+              ...new Map(
+                crossLinks
+                  .filter((c) => c.nodeId === selected.id)
+                  .map((c) => [c.documentId, c])
+              ).values(),
+            ]
+            if (appearsIn.length === 0) return null
+            return (
+              <div className="mt-3 pt-3 border-t border-zinc-800">
+                <p className="text-xs text-amber-400/90 mb-1.5">🔗 Also appears in</p>
+                {appearsIn.map((c) => (
+                  <Link
+                    key={c.documentId}
+                    href={`/graph/${c.documentId}`}
+                    className="block text-sm text-zinc-300 hover:text-amber-300 transition-colors truncate"
+                  >
+                    {c.documentTitle} →
+                  </Link>
+                ))}
+              </div>
+            )
+          })()}
           <div className="mt-3 flex items-center justify-between">
             <button
               onClick={() => setSelected(null)}

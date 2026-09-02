@@ -29,6 +29,39 @@ export type EdgeRow = {
 
 const VALID_LEVELS = ['star', 'planet', 'asteroid']
 
+/** Normalizes a node title for cross-document comparison. */
+export function normalizeTitle(title: string): string {
+  return title.toLowerCase().trim().replace(/\s+/g, ' ')
+}
+
+/**
+ * Finds cross-document same-concept pairs by normalized-title equality.
+ * Returns one link per (new node, existing node) pair. Pure and cheap —
+ * the future embeddings matcher will feed the same NodeLink table.
+ */
+export function findTitleMatches(
+  newNodes: { id: string; title: string }[],
+  existingNodes: { id: string; title: string }[]
+): { fromNodeId: string; toNodeId: string }[] {
+  const byNorm = new Map<string, string[]>()
+  for (const n of existingNodes) {
+    const key = normalizeTitle(n.title)
+    if (!key) continue
+    const list = byNorm.get(key) ?? []
+    list.push(n.id)
+    byNorm.set(key, list)
+  }
+  const links: { fromNodeId: string; toNodeId: string }[] = []
+  for (const n of newNodes) {
+    const key = normalizeTitle(n.title)
+    if (!key) continue
+    for (const existingId of byNorm.get(key) ?? []) {
+      links.push({ fromNodeId: n.id, toNodeId: existingId })
+    }
+  }
+  return links
+}
+
 /**
  * Collects a node and all its semantic descendants by walking "contains"
  * edges downward (star -> planets -> asteroids). Only real containment

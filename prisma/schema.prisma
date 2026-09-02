@@ -43,6 +43,26 @@ model KnowledgeNode {
   document  Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
   edgesFrom KnowledgeEdge[] @relation("EdgeFrom")
   edgesTo   KnowledgeEdge[] @relation("EdgeTo")
+  linksFrom NodeLink[]      @relation("LinkFrom")
+  linksTo   NodeLink[]      @relation("LinkTo")
+}
+
+// Cross-document concept link: two nodes in different documents that refer to
+// the same concept. Links, never merges — both nodes keep their own context.
+// matchType "title" = normalized-title match; "semantic" reserved for a
+// future embeddings-based matcher writing into this same table.
+model NodeLink {
+  id         String   @id @default(cuid())
+  fromNodeId String
+  toNodeId   String
+  kind       String   @default("same_concept")
+  matchType  String   @default("title")
+  createdAt  DateTime @default(now())
+
+  fromNode KnowledgeNode @relation("LinkFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode   KnowledgeNode @relation("LinkTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  @@unique([fromNodeId, toNodeId])
 }
 
 model KnowledgeEdge {

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { anthropic, EXTRACTION_MODEL } from '@/lib/anthropic'
 import { EXTRACTION_SYSTEM_PROMPT, EXTRACTION_TOOL } from '@/lib/prompts/extract'
-import { buildGraphRows, type ExtractedNode, type ExtractedEdge } from '@/lib/extraction'
+import { buildGraphRows, findTitleMatches, type ExtractedNode, type ExtractedEdge } from '@/lib/extraction'
 
 // Extraction takes ~20-40s for a typical document; Vercel Hobby allows up to 60s.
 export const maxDuration = 60
@@ -103,10 +103,28 @@ export async function POST(
       db.document.update({ where: { id }, data: { status: 'DONE', extractProgress: 100 } }),
     ])
 
+    // Cross-document linking: match new nodes against this user's other
+    // documents by normalized title and record same-concept links.
+    const existingNodes = await db.knowledgeNode.findMany({
+      where: { document: { userId: user.id }, documentId: { not: id } },
+      select: { id: true, title: true },
+    })
+    const links = findTitleMatches(nodeRows, existingNodes)
+    if (links.length > 0) {
+      await db.nodeLink.createMany({ data: links, skipDuplicates: true })
+    }
+    const linkedTitles = [
+      ...new Set(
+        links.map((l) => nodeRows.find((n) => n.id === l.fromNodeId)?.title).filter(Boolean)
+      ),
+    ]
+    console.log(`[extract] cross-document links: ${links.length} (${linkedTitles.join(', ')})`)
+
     return NextResponse.json({
       status: 'DONE',
       nodeCount: nodeRows.length,
       edgeCount: edgeRows.length,
+      crossLinks: { count: links.length, concepts: linkedTitles },
       nodes: nodeRows.map((n) => ({ title: n.title, level: n.level, summary: n.summary })),
       usage: message.usage,
     })

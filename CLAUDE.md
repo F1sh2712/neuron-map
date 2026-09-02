@@ -146,6 +146,7 @@ For production, set all of the above in Vercel → Project → Settings → Envi
 | `Document` | Uploaded Markdown file metadata + Supabase file URL + extraction status |
 | `KnowledgeNode` | AI-extracted concept; `level` field = `star` / `planet` / `asteroid`; `embedding` = pgvector column |
 | `KnowledgeEdge` | Relationship between two nodes (typed + weighted) |
+| `NodeLink` | Cross-document same-concept link (links, never merges; `matchType`: `title` now, `semantic` reserved for embeddings) |
 | `ChatSession` | A conversation thread scoped to a user |
 | `ChatMessage` | Individual message with optional node references |
 
