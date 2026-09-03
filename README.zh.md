@@ -2,88 +2,39 @@
 
 **在线体验：[neuron-map-six.vercel.app](https://neuron-map-six.vercel.app)**
 
-NeuronMap 把学习笔记变成一个"知识宇宙"：上传 Markdown 笔记，Claude AI 提取概念和它们之间的关系，渲染成会动的宇宙图谱——恒星（核心主题）被行星（子主题）环绕，行星又被陨石（细节）环绕。
+NeuronMap 把学习笔记变成一个"活的知识宇宙"。上传 Markdown 笔记，AI 提取概念和它们之间的关系，渲染成会动的宇宙图谱——恒星（核心主题）被行星（子主题）环绕，行星又被陨石（细节）环绕。继续上传更多笔记，不同文档中的相同概念会被金色丝线连接起来。
 
-Phase 1 MVP 采用 **Markdown-first** 路线：
+## 功能
 
-```text
-上传 Markdown 笔记
--> 按标题和章节解析
--> 调用 Claude 提取知识节点和关系
--> 存储 nodes / edges
--> 在页面中展示提取结果
+- **AI 知识提取** — 概念按标题层级分为恒星 / 行星 / 陨石三层，并生成带类型和权重的关系边（包含 / 依赖 / 相关 / 对比）。
+- **My Universe 总览** — 每个文档是同一片天空中的一个星系。拉远是孢子风格的宇宙视图，金色航线标注两个文档共享多少概念；推近时行星、陨石和它们的名字逐级浮现。
+- **星系钻取** — 点击任何恒星进入它的星系：左边是绕转的天体，右边是知识面板，面包屑可一路返回（行星 → 恒星 → 宇宙）。
+- **跨文档连接** — 提取时自动发现不同文档中的同名概念并建立链接（只连接、不合并），以金环标记。
+- **管理你的宇宙** — 可删除整个文档（连同其全部知识），也可删除单个节点；删除恒星只会精确移除它真正包含的子树。
+- **分阶段提取进度** — 状态轮询 API 驱动的实时进度条。
+- **隐私优先** — 按用户隔离的私有存储 + 行级安全策略；文件经 SDK 读取而非 URL；所有 AI 调用只在服务端。
+
+## 工作原理
+
+```
+Markdown 笔记 → AI 提取（节点 + 边）→ PostgreSQL → Canvas 宇宙渲染
 ```
 
-PDF 暂时不是 Phase 1 主线。后续可以把 PDF 作为输入适配器：先把 PDF 转成 Markdown，再复用同一套 Markdown 解析和 AI 提取流程。
-
-## 为什么先做 Markdown
-
-Markdown 比 PDF 更适合 Phase 1：
-
-- 标题天然表示层级。
-- 文本解析更稳定。
-- 文件更小，AI token 成本更低。
-- 可以按章节拆分，降低超时风险。
-- 结果更容易 debug 和验收。
-
-直接把完整 PDF 交给 Claude 解析适合快速 demo，但成本更高，也更难稳定复现。
-
-## 当前进展
-
-已完成：
-
-- Next.js App Router 项目基础结构。
-- Supabase Auth 登录和注册流程（邮箱 OTP、设置密码、完善资料）。
-- `/dashboard` 登录保护。
-- Prisma 数据模型：用户、文档、知识节点、知识关系，以及后续 chat 占位表。
-- Markdown（.md）上传至 Supabase Storage，含客户端文件类型和 5MB 大小校验。
-- Claude 从 Markdown 提取知识：概念节点按标题深度分为 star / planet / asteroid 三层，并生成带类型和权重的关系边。已用样例验证（10 个层级正确的节点，16 条边）。
-- 宇宙图谱视图：自定义 Canvas + requestAnimationFrame 轨道动画（恒星锚定、行星绕恒星、陨石绕行星），支持拖拽重新归属、点击查看详情、悬停高亮。
-- 文档列表 dashboard + 导航栏（状态标签、View graph 直达）。
-- 分阶段提取进度（状态轮询 API + 进度条）。
-- 私有 Storage bucket + 只能读写自己文件夹的 RLS；服务端经 SDK 读文件，不再 fetch URL（消除 SSRF）。
-- 提取逻辑单元测试（`npm test`）。
-- Vercel 生产部署：[neuron-map-six.vercel.app](https://neuron-map-six.vercel.app)。
-- 代码全部英文（UI、prompt、注释、API 消息）。
-- TypeScript、lint、production build 当前可以通过。
-
-部分完成：
-
-- 提取是 60 秒函数预算内的单次 Claude 调用；超大文档以后需要队列/异步任务。
-- 更清晰的“学习”视图（技能树布局）视觉方向已定；宇宙视图是当前默认。
-
-未完成：
-
-- 文档详情页和文档删除。
-- 技能树学习视图（实现）。
-- 跨文件知识合并（embeddings / pgvector）。
-- AI chat。
+Phase 1 刻意选择 Markdown 作为输入：标题天然编码层级、提取便宜且可验证。PDF 以后可以作为"PDF 转 Markdown"适配器接入同一条管道。
 
 ## 技术栈
 
-| 层 | 技术 |
+| 层 | 选择 |
 |---|---|
-| Framework | Next.js 16 App Router |
+| 框架 | Next.js 16 App Router |
 | UI | React 19 + Tailwind CSS v4 |
-| Auth | Supabase Auth |
-| Database | Supabase PostgreSQL |
+| 认证 | Supabase Auth |
+| 数据库 | Supabase PostgreSQL |
 | ORM | Prisma 7 + `@prisma/adapter-pg` |
-| Storage | Supabase Storage |
+| 存储 | Supabase Storage（私有 + RLS）|
 | AI | Anthropic Claude API |
-| Deploy target | Vercel |
-
-## 项目文档
-
-本项目按仓库规范维护以下文档：
-
-- `01-project-brief.md` - 项目目标、范围、风险。
-- `02-prd.md` - Phase 1 产品需求。
-- `03-runbook.md` - 安装、运行、验证步骤。
-- `04-ai-usage.md` - AI 使用记录。
-- `05-submission.md` - 当前提交说明。
-- `06-review-checklist.md` - 提交前自查清单。
-
-更多设计记录放在 `docs/` 目录下。
+| 渲染 | 自定义 Canvas + requestAnimationFrame |
+| 部署 | Vercel（悉尼）|
 
 ## 本地运行
 
@@ -94,48 +45,31 @@ npx prisma db push
 npm run dev
 ```
 
-打开：
-
-```text
-http://localhost:3000
-```
-
-需要在 `.env.local` 中配置：
+创建 `.env.local` 并填入你自己的密钥（切勿提交）：
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-DATABASE_URL=postgresql://...
-DIRECT_URL=postgresql://...
-ANTHROPIC_API_KEY=sk-ant-...
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+DATABASE_URL=
+DIRECT_URL=
+ANTHROPIC_API_KEY=
 ```
 
-不要提交 `.env.local` 或任何真实 secret。
-
-## 验证命令
+## 测试
 
 ```bash
-npx tsc --noEmit
-npm run lint
-npm run build
+npm test        # 单元测试（提取转换、子树删除、跨文档匹配）
+npm run build   # 类型检查 + 生产构建
 ```
 
-最新本地验证记录在：
+## 路线图
 
-```text
-evidence/logs/2026-07-04-verification.md
-```
+- 技能树学习视图（视觉方向已定），作为可切换的第二视图。
+- 超大文档的异步提取任务。
+- 语义级跨文档合并（embeddings + pgvector），复用现有链接表。
+- 基于知识库的 AI 问答。
+- 用户自带 API key。
 
-## 下一步实现计划
+---
 
-1. 实现技能树学习视图（视觉方向已确定），作为宇宙图谱之外可切换的第二视图。
-2. 增加文档列表和文档详情页。
-3. 把提取改为异步 + `GET /api/documents/[id]/status` 轮询，让大文档不超 serverless 超时。
-4. 跨文件知识合并：用 embeddings + pgvector 把不同文档里的同一概念连起来。
-5. 把手动验证证据保存到 `evidence/`。
-
-## 安全规则
-
-- 不提交 `.env`、`.env.local`、数据库连接串、API key 或真实用户数据。
-- 截图和测试数据使用虚构内容。
-- AI API 调用必须在服务端完成。
+English version: [README.md](README.md)
