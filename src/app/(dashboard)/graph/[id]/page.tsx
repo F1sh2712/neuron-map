@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
-import { CosmicGraph } from '@/components/cosmos/CosmicGraph'
+import { GraphWorkspace } from '@/components/cosmos/GraphWorkspace'
 
 export default async function GraphPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -53,9 +53,7 @@ export default async function GraphPage({ params }: { params: Promise<{ id: stri
           <span>☄️ asteroid</span>
         </div>
       </header>
-      <div className="flex-1 min-h-0">
-        <CosmicGraph nodes={nodes} edges={edges} crossLinks={crossLinks} />
-      </div>
+      <GraphWorkspace documentId={id} nodes={nodes} edges={edges} crossLinks={crossLinks} />
     </div>
   )
 }

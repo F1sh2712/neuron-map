@@ -53,10 +53,14 @@ export function CosmicGraph({
   nodes,
   edges,
   crossLinks = [],
+  focus,
 }: {
   nodes: GraphNode[]
   edges: GraphEdge[]
   crossLinks?: CrossLink[]
+  // External selection request (e.g. a chat citation click); nonce lets the
+  // same node be re-focused repeatedly.
+  focus?: { id: string; nonce: number } | null
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [selected, setSelected] = useState<GraphNode | null>(null)
@@ -69,6 +73,12 @@ export function CosmicGraph({
   useEffect(() => {
     selectedRef.current = selected
   }, [selected])
+
+  useEffect(() => {
+    if (!focus) return
+    const n = nodes.find((x) => x.id === focus.id)
+    if (n) setSelected(n)
+  }, [focus, nodes])
 
   useEffect(() => {
     const canvas = canvasRef.current!
