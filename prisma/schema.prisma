@@ -27,8 +27,9 @@ model Document {
   extractProgress Int      @default(0)
   createdAt       DateTime @default(now())
 
-  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  nodes KnowledgeNode[]
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nodes        KnowledgeNode[]
+  chatSessions ChatSession[]
 }
 
 model KnowledgeNode {
@@ -80,13 +81,17 @@ model KnowledgeEdge {
 }
 
 model ChatSession {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String   @default("New Chat")
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  documentId String?
+  title      String   @default("New Chat")
+  createdAt  DateTime @default(now())
 
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document Document?     @relation(fields: [documentId], references: [id], onDelete: Cascade)
   messages ChatMessage[]
+
+  @@unique([userId, documentId])
 }
 
 model ChatMessage {

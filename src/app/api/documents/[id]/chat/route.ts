@@ -74,9 +74,11 @@ export async function POST(
   const encoder = new TextEncoder()
   const readable = new ReadableStream({
     async start(controller) {
+      let answer = ''
       try {
         for await (const event of stream) {
           if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+            answer += event.delta.text
             controller.enqueue(encoder.encode(event.delta.text))
           }
         }
@@ -85,6 +87,34 @@ export async function POST(
         controller.enqueue(encoder.encode('\n\n[The answer was interrupted — please try again.]'))
       } finally {
         controller.close()
+      }
+
+      // Persist the exchange so the conversation survives reloads. Best-effort:
+      // the user already has their answer on screen.
+      if (answer) {
+        try {
+          const idByTitle = new Map(nodes.map((n) => [n.title.toLowerCase(), n.id]))
+          const referencedNodeIds = [
+            ...new Set(
+              [...answer.matchAll(/\[\[([^\]]+)\]\]/g)]
+                .map((m) => idByTitle.get(m[1].toLowerCase()))
+                .filter((x): x is string => Boolean(x))
+            ),
+          ]
+          const session = await db.chatSession.upsert({
+            where: { userId_documentId: { userId: user.id, documentId: id } },
+            create: { userId: user.id, documentId: id, title: document.title },
+            update: {},
+          })
+          await db.chatMessage.createMany({
+            data: [
+              { sessionId: session.id, role: 'user', content: turns[turns.length - 1].content, referencedNodeIds: [] },
+              { sessionId: session.id, role: 'assistant', content: answer, referencedNodeIds },
+            ],
+          })
+        } catch (err) {
+          console.error('[chat] failed to persist messages:', err)
+        }
       }
     },
   })
@@ -95,4 +125,17 @@ export async function POST(
       'Cache-Control': 'no-cache',
     },
   })
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  await db.chatSession.deleteMany({ where: { userId: user.id, documentId: id } })
+  return NextResponse.json({ ok: true })
 }

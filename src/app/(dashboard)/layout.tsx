@@ -10,8 +10,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/login')
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
-      <nav className="flex items-center justify-between px-6 py-3 border-b border-zinc-900 bg-zinc-950/95 sticky top-0 z-20">
+    // Locked to the viewport: the app shell never scrolls. Pages scroll inside
+    // the wrapper below; the chat panel scrolls inside its own message list.
+    <div className="h-dvh overflow-hidden bg-zinc-950 flex flex-col">
+      <nav className="flex-none flex items-center justify-between px-6 py-3 border-b border-zinc-900 bg-zinc-950/95 z-20">
         <div className="flex items-center gap-6">
           <Link href="/dashboard" className="flex items-center gap-2">
             <img src="/icon.svg" alt="NeuronMap" className="w-7 h-7 rounded-lg" />
@@ -31,7 +33,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
         <SignOutButton />
       </nav>
-      <div className="flex-1 min-h-0 flex flex-col">{children}</div>
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">{children}</div>
     </div>
   )
 }

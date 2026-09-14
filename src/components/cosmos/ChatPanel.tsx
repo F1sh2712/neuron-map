@@ -26,14 +26,24 @@ function renderWithCitations(text: string, onCite: (title: string) => void) {
 export function ChatPanel({
   documentId,
   onCite,
+  initialMessages = [],
 }: {
   documentId: string
   onCite: (title: string) => void
+  initialMessages?: Msg[]
 }) {
-  const [messages, setMessages] = useState<Msg[]>([])
+  const [messages, setMessages] = useState<Msg[]>(initialMessages)
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  async function clearChat() {
+    if (busy || messages.length === 0) return
+    if (!window.confirm('Clear this conversation? The saved history will be deleted.')) return
+    const res = await fetch(`/api/documents/${documentId}/chat`, { method: 'DELETE' })
+    if (res.ok) setMessages([])
+    else window.alert('Failed to clear the conversation, please try again.')
+  }
 
   function scrollDown() {
     requestAnimationFrame(() => {
@@ -82,6 +92,17 @@ export function ChatPanel({
   return (
     <div className="flex flex-col h-full">
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+        {messages.length > 0 && (
+          <div className="flex justify-end">
+            <button
+              onClick={clearChat}
+              disabled={busy}
+              className="text-[11px] text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
+            >
+              Clear conversation
+            </button>
+          </div>
+        )}
         {messages.length === 0 && (
           <div className="text-sm text-zinc-500 leading-relaxed pt-4">
             Ask anything about this universe —<br />

@@ -38,6 +38,16 @@ export default async function GraphPage({ params }: { params: Promise<{ id: stri
     return { nodeId: localId, documentId: far.document.id, documentTitle: far.document.title }
   })
 
+  // Persisted conversation for this document, so chat survives reloads.
+  const session = await db.chatSession.findUnique({
+    where: { userId_documentId: { userId: user.id, documentId: id } },
+    include: { messages: { orderBy: { createdAt: 'asc' }, select: { role: true, content: true } } },
+  })
+  const chatHistory = (session?.messages ?? []).filter(
+    (m): m is { role: 'user' | 'assistant'; content: string } =>
+      m.role === 'user' || m.role === 'assistant'
+  )
+
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <header className="flex items-center justify-between px-6 py-3 border-b border-zinc-900">
@@ -53,7 +63,13 @@ export default async function GraphPage({ params }: { params: Promise<{ id: stri
           <span>☄️ asteroid</span>
         </div>
       </header>
-      <GraphWorkspace documentId={id} nodes={nodes} edges={edges} crossLinks={crossLinks} />
+      <GraphWorkspace
+        documentId={id}
+        nodes={nodes}
+        edges={edges}
+        crossLinks={crossLinks}
+        chatHistory={chatHistory}
+      />
     </div>
   )
 }
