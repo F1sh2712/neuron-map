@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-
-const MIN_PASSWORD_LENGTH = 8
+import { getPasswordStrength, MIN_STRENGTH, WEAK_PASSWORD_MESSAGE } from '@/lib/password'
+import { PasswordStrengthBar } from '@/components/PasswordStrengthBar'
 
 const inputClass =
   'w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent'
@@ -25,8 +25,8 @@ export default function SettingsPage() {
     e.preventDefault()
     setError('')
     setSuccess('')
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
+    if (getPasswordStrength(password) < MIN_STRENGTH) {
+      setError(WEAK_PASSWORD_MESSAGE)
       return
     }
     if (password !== confirm) {
@@ -75,6 +75,7 @@ export default function SettingsPage() {
               autoComplete="new-password"
               className={inputClass}
             />
+            <PasswordStrengthBar password={password} />
           </div>
           <div>
             <label className="block text-sm font-medium text-zinc-400 mb-1.5">Confirm new password</label>

@@ -14,12 +14,34 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   async function sendOtp() {
     setError('')
+    setAlreadyRegistered(false)
     setLoading(true)
+
+    // Point existing accounts to sign-in instead of silently sending a code.
+    try {
+      const check = await fetch('/api/auth/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      if (check.ok) {
+        const { registered } = (await check.json()) as { registered: boolean }
+        if (registered) {
+          setAlreadyRegistered(true)
+          setLoading(false)
+          return
+        }
+      }
+    } catch {
+      // If the check itself fails, fall through — the OTP flow still works.
+    }
+
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -78,6 +100,20 @@ export default function RegisterPage() {
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
               />
             </div>
+            {alreadyRegistered && (
+              <div className="text-sm bg-amber-950/40 border border-amber-900 rounded-lg px-3 py-2.5">
+                <p className="text-amber-300">This email is already registered.</p>
+                <p className="text-zinc-400 mt-1">
+                  <Link href="/login" className="text-violet-400 hover:text-violet-300 transition-colors font-medium">
+                    Sign in instead →
+                  </Link>
+                  {'  '}·{'  '}
+                  <Link href="/forgot-password" className="text-zinc-400 hover:text-zinc-200 transition-colors">
+                    Forgot password?
+                  </Link>
+                </p>
+              </div>
+            )}
             {error && (
               <p className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2">{error}</p>
             )}
@@ -93,9 +129,6 @@ export default function RegisterPage() {
               <Link href="/login" className="text-violet-400 hover:text-violet-300 transition-colors">
                 Sign in
               </Link>
-            </p>
-            <p className="text-center text-xs text-zinc-600">
-              If this email is already registered, verifying the code simply signs you in — no duplicate account is created.
             </p>
           </div>
         )}
