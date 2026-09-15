@@ -31,7 +31,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </Link>
           </div>
         </div>
-        <SignOutButton />
+        <div className="flex items-center gap-4">
+          <Link href="/settings" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            Settings
+          </Link>
+          <SignOutButton />
+        </div>
       </nav>
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">{children}</div>
     </div>

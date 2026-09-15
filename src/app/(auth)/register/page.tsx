@@ -94,6 +94,9 @@ export default function RegisterPage() {
                 Sign in
               </Link>
             </p>
+            <p className="text-center text-xs text-zinc-600">
+              If this email is already registered, verifying the code simply signs you in — no duplicate account is created.
+            </p>
           </div>
         )}
 
