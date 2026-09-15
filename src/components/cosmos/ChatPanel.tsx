@@ -64,6 +64,24 @@ export function ChatPanel({
     }
   }
 
+  async function renameChat() {
+    if (busy || !activeId) return
+    const current = sessions.find((s) => s.id === activeId)
+    const next = window.prompt('Rename this conversation:', current?.title ?? '')?.trim()
+    if (!next || next === current?.title) return
+    const res = await fetch(`/api/documents/${documentId}/chat`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: activeId, title: next }),
+    })
+    if (!res.ok) {
+      window.alert('Failed to rename the conversation, please try again.')
+      return
+    }
+    const { title } = (await res.json()) as { title: string }
+    setSessions((prev) => prev.map((s) => (s.id === activeId ? { ...s, title } : s)))
+  }
+
   async function deleteChat() {
     if (busy) return
     if (!activeId) {
@@ -148,6 +166,16 @@ export function ChatPanel({
               </option>
             ))}
           </select>
+          {activeId && (
+            <button
+              onClick={renameChat}
+              disabled={busy}
+              title="Rename this conversation"
+              className="flex-none text-xs text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg px-2.5 py-1.5 disabled:opacity-40 transition-colors"
+            >
+              ✎
+            </button>
+          )}
           <button
             onClick={newChat}
             disabled={busy || (activeId === null && messages.length === 0)}

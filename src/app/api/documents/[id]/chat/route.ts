@@ -174,6 +174,34 @@ export async function GET(
   return NextResponse.json({ sessions })
 }
 
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const user = await requireUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  let body: { sessionId?: unknown; title?: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+  const sessionId = typeof body.sessionId === 'string' ? body.sessionId : null
+  const title = typeof body.title === 'string' ? body.title.trim().slice(0, SESSION_TITLE_CHARS) : ''
+  if (!sessionId || !title) {
+    return NextResponse.json({ error: 'sessionId and a non-empty title are required' }, { status: 400 })
+  }
+
+  const { count } = await db.chatSession.updateMany({
+    where: { id: sessionId, userId: user.id, documentId: id },
+    data: { title },
+  })
+  if (count === 0) return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
+  return NextResponse.json({ ok: true, title })
+}
+
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
