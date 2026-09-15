@@ -8,16 +8,22 @@ export const maxDuration = 60
 
 const MAX_TURNS = 12
 const MAX_MESSAGE_CHARS = 2000
+const SESSION_TITLE_CHARS = 60
 
 type ChatTurn = { role: 'user' | 'assistant'; content: string }
+
+async function requireUser() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
+}
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await requireUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const document = await db.document.findUnique({ where: { id } })
@@ -25,7 +31,7 @@ export async function POST(
     return NextResponse.json({ error: 'Document not found' }, { status: 404 })
   }
 
-  let body: { messages?: unknown }
+  let body: { messages?: unknown; sessionId?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -40,6 +46,25 @@ export async function POST(
     .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_MESSAGE_CHARS) }))
   if (turns.length === 0 || turns[turns.length - 1].role !== 'user') {
     return NextResponse.json({ error: 'Last message must be from the user' }, { status: 400 })
+  }
+  const question = turns[turns.length - 1].content
+
+  // Resolve the conversation up front so the client learns its id from the
+  // response headers even on a brand-new chat.
+  const requestedSessionId = typeof body.sessionId === 'string' ? body.sessionId : null
+  let session: { id: string }
+  if (requestedSessionId) {
+    const existing = await db.chatSession.findFirst({
+      where: { id: requestedSessionId, userId: user.id, documentId: id },
+      select: { id: true },
+    })
+    if (!existing) return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
+    session = existing
+  } else {
+    session = await db.chatSession.create({
+      data: { userId: user.id, documentId: id, title: question.slice(0, SESSION_TITLE_CHARS) },
+      select: { id: true },
+    })
   }
 
   // The document's extracted knowledge is the grounding context.
@@ -101,14 +126,9 @@ export async function POST(
                 .filter((x): x is string => Boolean(x))
             ),
           ]
-          const session = await db.chatSession.upsert({
-            where: { userId_documentId: { userId: user.id, documentId: id } },
-            create: { userId: user.id, documentId: id, title: document.title },
-            update: {},
-          })
           await db.chatMessage.createMany({
             data: [
-              { sessionId: session.id, role: 'user', content: turns[turns.length - 1].content, referencedNodeIds: [] },
+              { sessionId: session.id, role: 'user', content: question, referencedNodeIds: [] },
               { sessionId: session.id, role: 'assistant', content: answer, referencedNodeIds },
             ],
           })
@@ -123,19 +143,49 @@ export async function POST(
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-cache',
+      'X-Chat-Session': session.id,
     },
   })
 }
 
-export async function DELETE(
-  _req: Request,
+export async function GET(
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await requireUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  await db.chatSession.deleteMany({ where: { userId: user.id, documentId: id } })
-  return NextResponse.json({ ok: true })
+  const sessionId = new URL(req.url).searchParams.get('sessionId')
+  if (sessionId) {
+    const session = await db.chatSession.findFirst({
+      where: { id: sessionId, userId: user.id, documentId: id },
+      include: { messages: { orderBy: { createdAt: 'asc' }, select: { role: true, content: true } } },
+    })
+    if (!session) return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
+    return NextResponse.json({ messages: session.messages })
+  }
+
+  const sessions = await db.chatSession.findMany({
+    where: { userId: user.id, documentId: id },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, title: true, createdAt: true },
+  })
+  return NextResponse.json({ sessions })
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const user = await requireUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const sessionId = new URL(req.url).searchParams.get('sessionId')
+  const where = sessionId
+    ? { id: sessionId, userId: user.id, documentId: id }
+    : { userId: user.id, documentId: id }
+  const { count } = await db.chatSession.deleteMany({ where })
+  return NextResponse.json({ ok: true, deleted: count })
 }

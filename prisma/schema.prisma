@@ -91,7 +91,7 @@ model ChatSession {
   document Document?     @relation(fields: [documentId], references: [id], onDelete: Cascade)
   messages ChatMessage[]
 
-  @@unique([userId, documentId])
+  @@index([userId, documentId])
 }
 
 model ChatMessage {

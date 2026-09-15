@@ -9,12 +9,16 @@ export function GraphWorkspace({
   nodes,
   edges,
   crossLinks,
+  chatSessions,
+  activeChatSessionId,
   chatHistory,
 }: {
   documentId: string
   nodes: GraphNode[]
   edges: GraphEdge[]
   crossLinks: CrossLink[]
+  chatSessions: { id: string; title: string }[]
+  activeChatSessionId: string | null
   chatHistory: { role: 'user' | 'assistant'; content: string }[]
 }) {
   const [focus, setFocus] = useState<{ id: string; nonce: number } | null>(null)
@@ -54,7 +58,13 @@ export function GraphWorkspace({
           </button>
         </div>
         <div className="flex-1 min-h-0">
-          <ChatPanel documentId={documentId} onCite={handleCite} initialMessages={chatHistory} />
+          <ChatPanel
+            documentId={documentId}
+            onCite={handleCite}
+            initialSessions={chatSessions}
+            initialSessionId={activeChatSessionId}
+            initialMessages={chatHistory}
+          />
         </div>
       </aside>
     </div>

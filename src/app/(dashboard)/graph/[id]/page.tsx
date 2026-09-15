@@ -38,12 +38,22 @@ export default async function GraphPage({ params }: { params: Promise<{ id: stri
     return { nodeId: localId, documentId: far.document.id, documentTitle: far.document.title }
   })
 
-  // Persisted conversation for this document, so chat survives reloads.
-  const session = await db.chatSession.findUnique({
-    where: { userId_documentId: { userId: user.id, documentId: id } },
-    include: { messages: { orderBy: { createdAt: 'asc' }, select: { role: true, content: true } } },
+  // Persisted conversations for this document; the most recent one opens
+  // with its messages restored, the rest are switchable in the panel.
+  const chatSessions = await db.chatSession.findMany({
+    where: { userId: user.id, documentId: id },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, title: true },
   })
-  const chatHistory = (session?.messages ?? []).filter(
+  const activeChatSession = chatSessions[0] ?? null
+  const rawMessages = activeChatSession
+    ? await db.chatMessage.findMany({
+        where: { sessionId: activeChatSession.id },
+        orderBy: { createdAt: 'asc' },
+        select: { role: true, content: true },
+      })
+    : []
+  const chatHistory = rawMessages.filter(
     (m): m is { role: 'user' | 'assistant'; content: string } =>
       m.role === 'user' || m.role === 'assistant'
   )
@@ -68,6 +78,8 @@ export default async function GraphPage({ params }: { params: Promise<{ id: stri
         nodes={nodes}
         edges={edges}
         crossLinks={crossLinks}
+        chatSessions={chatSessions}
+        activeChatSessionId={activeChatSession?.id ?? null}
         chatHistory={chatHistory}
       />
     </div>

@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 
 type Msg = { role: 'user' | 'assistant'; content: string }
+type SessionMeta = { id: string; title: string }
 
 // Splits text on [[Node Title]] citations so they can render as chips.
 function renderWithCitations(text: string, onCite: (title: string) => void) {
@@ -26,23 +27,57 @@ function renderWithCitations(text: string, onCite: (title: string) => void) {
 export function ChatPanel({
   documentId,
   onCite,
+  initialSessions = [],
+  initialSessionId = null,
   initialMessages = [],
 }: {
   documentId: string
   onCite: (title: string) => void
+  initialSessions?: SessionMeta[]
+  initialSessionId?: string | null
   initialMessages?: Msg[]
 }) {
+  const [sessions, setSessions] = useState<SessionMeta[]>(initialSessions)
+  const [activeId, setActiveId] = useState<string | null>(initialSessionId)
   const [messages, setMessages] = useState<Msg[]>(initialMessages)
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  async function clearChat() {
-    if (busy || messages.length === 0) return
-    if (!window.confirm('Clear this conversation? The saved history will be deleted.')) return
-    const res = await fetch(`/api/documents/${documentId}/chat`, { method: 'DELETE' })
-    if (res.ok) setMessages([])
-    else window.alert('Failed to clear the conversation, please try again.')
+  function newChat() {
+    if (busy) return
+    setActiveId(null)
+    setMessages([])
+  }
+
+  async function switchSession(id: string) {
+    if (busy || id === activeId) return
+    setActiveId(id)
+    setMessages([])
+    const res = await fetch(`/api/documents/${documentId}/chat?sessionId=${id}`)
+    if (res.ok) {
+      const data = (await res.json()) as { messages: Msg[] }
+      setMessages(data.messages)
+      scrollDown()
+    } else {
+      window.alert('Failed to load that conversation, please try again.')
+    }
+  }
+
+  async function deleteChat() {
+    if (busy) return
+    if (!activeId) {
+      setMessages([])
+      return
+    }
+    if (!window.confirm('Delete this conversation? Its saved history will be removed.')) return
+    const res = await fetch(`/api/documents/${documentId}/chat?sessionId=${activeId}`, { method: 'DELETE' })
+    if (!res.ok) {
+      window.alert('Failed to delete the conversation, please try again.')
+      return
+    }
+    setSessions((prev) => prev.filter((s) => s.id !== activeId))
+    newChat()
   }
 
   function scrollDown() {
@@ -64,12 +99,19 @@ export function ChatPanel({
       const res = await fetch(`/api/documents/${documentId}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, sessionId: activeId }),
       })
       if (!res.ok || !res.body) {
         const err = await res.json().catch(() => ({ error: 'Request failed' }))
         setMessages([...history, { role: 'assistant', content: `Sorry — ${err.error ?? 'request failed'}.` }])
         return
+      }
+      // A new conversation is created server-side on the first question; its
+      // id comes back in a header so follow-ups land in the same session.
+      const sid = res.headers.get('X-Chat-Session')
+      if (sid && sid !== activeId) {
+        setActiveId(sid)
+        setSessions((prev) => [{ id: sid, title: question.slice(0, 60) }, ...prev])
       }
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -91,15 +133,40 @@ export function ChatPanel({
 
   return (
     <div className="flex flex-col h-full">
+      {(sessions.length > 0 || messages.length > 0) && (
+        <div className="flex-none flex items-center gap-2 px-3 pt-3">
+          <select
+            value={activeId ?? ''}
+            onChange={(e) => (e.target.value ? switchSession(e.target.value) : newChat())}
+            disabled={busy}
+            className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-60"
+          >
+            <option value="">✨ New conversation</option>
+            {sessions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={newChat}
+            disabled={busy || (activeId === null && messages.length === 0)}
+            title="Start a new conversation"
+            className="flex-none text-xs text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg px-2.5 py-1.5 disabled:opacity-40 transition-colors"
+          >
+            + New
+          </button>
+        </div>
+      )}
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
-        {messages.length > 0 && (
+        {messages.length > 0 && activeId && (
           <div className="flex justify-end">
             <button
-              onClick={clearChat}
+              onClick={deleteChat}
               disabled={busy}
               className="text-[11px] text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
             >
-              Clear conversation
+              Delete conversation
             </button>
           </div>
         )}

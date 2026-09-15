@@ -68,8 +68,9 @@ export function CosmicGraph({
   const selectedRef = useRef<GraphNode | null>(null)
   // Camera lives in a ref so the view survives data refreshes (e.g. after a delete).
   const cameraRef = useRef({ scale: 1, ox: 0, oy: 0 })
-  // Node id the camera should fly to (set by chat citation clicks).
-  const flyToRef = useRef<string | null>(null)
+  // Camera flight target (set by chat citation clicks); age caps the flight
+  // so the camera never locks onto an orbiting body indefinitely.
+  const flyToRef = useRef<{ id: string; age: number } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -81,7 +82,7 @@ export function CosmicGraph({
     const n = nodes.find((x) => x.id === focus.id)
     if (n) {
       setSelected(n)
-      flyToRef.current = n.id
+      flyToRef.current = { id: n.id, age: 0 }
     }
   }, [focus, nodes])
 
@@ -363,11 +364,15 @@ export function CosmicGraph({
         }
       }
 
-      // Camera flight: glide until the target body (which keeps orbiting) is
-      // centered on screen, at a readable zoom. Any manual input cancels it.
+      // Camera flight: glide toward the cited body, then RELEASE — the body
+      // keeps orbiting while the camera stays put. Without the release the
+      // camera would track an orbiting body forever, making the whole
+      // universe appear to rotate around it. Manual input also cancels.
       if (flyToRef.current) {
-        const target = bodyById.get(flyToRef.current)
-        if (!target) {
+        const fly = flyToRef.current
+        const target = bodyById.get(fly.id)
+        fly.age += 1
+        if (!target || fly.age > 120) {
           flyToRef.current = null
         } else {
           const targetScale = Math.max(cam.scale, 1.2)
@@ -376,7 +381,7 @@ export function CosmicGraph({
           cam.scale += (targetScale - cam.scale) * 0.08
           cam.ox += (tx - cam.ox) * 0.08
           cam.oy += (ty - cam.oy) * 0.08
-          if (Math.hypot(tx - cam.ox, ty - cam.oy) < 2 && Math.abs(targetScale - cam.scale) < 0.01) {
+          if (Math.hypot(tx - cam.ox, ty - cam.oy) < 10 && Math.abs(targetScale - cam.scale) < 0.02) {
             flyToRef.current = null
           }
         }
