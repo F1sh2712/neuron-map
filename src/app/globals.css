@@ -19,6 +19,12 @@
   --font-serif: var(--font-garamond), Georgia, "Times New Roman", serif;
 }
 
+/* Garamond's small x-height reads a size down from UI fonts; a larger rem
+   base scales text AND rem-based controls/spacing together. */
+html {
+  font-size: 18px;
+}
+
 body {
   background: radial-gradient(ellipse at 50% 30%, #eee0bf 0%, #e9dcbb 45%, #d9c592 100%) fixed;
   color: var(--color-ink);

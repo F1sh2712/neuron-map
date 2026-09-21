@@ -6,7 +6,7 @@ import { getPasswordStrength, MIN_STRENGTH, WEAK_PASSWORD_MESSAGE } from '@/lib/
 import { PasswordStrengthBar } from '@/components/PasswordStrengthBar'
 
 const inputClass =
-  'w-full bg-paper border border-ink-line px-3 py-2 text-[15px] text-ink placeholder:text-ink-line placeholder:italic focus:outline-none focus:border-vermilion'
+  'w-full bg-paper border border-ink-line px-3 py-2 text-base text-ink placeholder:text-ink-line placeholder:italic focus:outline-none focus:border-vermilion'
 
 export default function SettingsPage() {
   const [email, setEmail] = useState('')

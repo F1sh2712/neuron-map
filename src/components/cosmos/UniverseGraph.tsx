@@ -56,7 +56,7 @@ const SHOW_STAR_LABELS = 0.5
 const SHOW_ASTEROIDS = 1.0
 const SHOW_PLANET_LABELS = 1.0
 const SHOW_ASTEROID_LABELS = 1.7
-const LABEL_SIZE: Record<string, number> = { star: 13, planet: 11, asteroid: 9 }
+const LABEL_SIZE: Record<string, number> = { star: 15, planet: 12.5, asteroid: 10.5 }
 
 function styleFor(level: string) {
   return STYLE[level] ?? STYLE.asteroid
@@ -408,7 +408,7 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
         const mx = (A.x + B.x) / 2
         const my = (A.y + B.y) / 2
         ctx.fillStyle = GILT
-        ctx.font = `italic ${13 / cam.scale}px ${fontFam}`
+        ctx.font = `italic ${14.5 / cam.scale}px ${fontFam}`
         ctx.textAlign = 'center'
         ctx.fillText(`${lane.count} shared`, mx, my - 7 / cam.scale)
       }
@@ -516,7 +516,7 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
       for (const gc of galaxyCenters.values()) {
         const zoomedOut = cam.scale < SHOW_PLANETS
         ctx.fillStyle = zoomedOut ? INK : 'rgba(107, 86, 55, 0.5)'
-        ctx.font = `600 ${(zoomedOut ? 16 : 13) / cam.scale}px ${fontFam}`
+        ctx.font = `600 ${(zoomedOut ? 18 : 14.5) / cam.scale}px ${fontFam}`
         ctx.textAlign = 'center'
         ctx.letterSpacing = `${2 / cam.scale}px`
         ctx.fillText(gc.galaxy.documentTitle.toUpperCase(), gc.x, gc.y - gc.radius - 26)

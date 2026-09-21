@@ -9,7 +9,7 @@ import { PasswordStrengthBar } from '@/components/PasswordStrengthBar'
 type Step = 'password' | 'profile'
 
 const inputClass =
-  'w-full bg-paper border border-ink-line px-3 py-2 text-[15px] text-ink placeholder:text-ink-line placeholder:italic focus:outline-none focus:border-vermilion'
+  'w-full bg-paper border border-ink-line px-3 py-2 text-base text-ink placeholder:text-ink-line placeholder:italic focus:outline-none focus:border-vermilion'
 const buttonClass =
   'w-full bg-ink text-paper-card tracking-[0.08em] py-2.5 shadow-plate-sm hover:bg-ink-soft disabled:opacity-60 disabled:cursor-not-allowed transition-colors'
 const errorClass = 'text-sm text-vermilion border border-vermilion/60 bg-vermilion/5 px-3 py-2'

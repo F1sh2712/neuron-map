@@ -134,7 +134,7 @@ export default async function Home() {
 
           <div className="flex-1 w-full max-w-2xl relative">
             <EngravedChart />
-            <p className="italic text-[13px] text-ink-faded text-center mt-1">
+            <p className="italic text-sm text-ink-faded text-center mt-1">
               Fig. I — The system of Graph Algorithms, eleven bodies, as surveyed from one student&apos;s notes
             </p>
           </div>
@@ -144,15 +144,15 @@ export default async function Home() {
         <div id="how-it-works" className="grid grid-cols-1 md:grid-cols-3 border-t-[1.5px] border-ink mt-14">
           <div className="py-6 md:pr-8">
             <h2 className="text-xl font-semibold">I. Upload your notes</h2>
-            <p className="text-[15px] leading-relaxed text-ink-soft mt-1">Any Markdown file — lecture notes, summaries, readings.</p>
+            <p className="text-base leading-relaxed text-ink-soft mt-1">Any Markdown file — lecture notes, summaries, readings.</p>
           </div>
           <div className="py-6 md:px-8 md:border-l-[0.75px] border-ink-line">
             <h2 className="text-xl font-semibold">II. AI draws the chart</h2>
-            <p className="text-[15px] leading-relaxed text-ink-soft mt-1">Every concept is placed — stars, planets, moons — with the links between them.</p>
+            <p className="text-base leading-relaxed text-ink-soft mt-1">Every concept is placed — stars, planets, moons — with the links between them.</p>
           </div>
           <div className="py-6 md:pl-8 md:border-l-[0.75px] border-ink-line">
             <h2 className="text-xl font-semibold">III. Explore and ask</h2>
-            <p className="text-[15px] leading-relaxed text-ink-soft mt-1">Wander the map and question it — answers cite the exact concepts.</p>
+            <p className="text-base leading-relaxed text-ink-soft mt-1">Wander the map and question it — answers cite the exact concepts.</p>
           </div>
         </div>
 

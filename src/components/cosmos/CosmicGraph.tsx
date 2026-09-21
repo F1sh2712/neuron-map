@@ -453,14 +453,14 @@ export function CosmicGraph({
 
         if (b.node.level === 'star') {
           ctx.fillStyle = INK
-          ctx.font = `600 13px ${fontFam}`
+          ctx.font = `600 15px ${fontFam}`
           ctx.textAlign = 'center'
           ctx.letterSpacing = '1.5px'
           ctx.fillText(b.node.title.toUpperCase(), b.x, b.y + vr + 17)
           ctx.letterSpacing = '0px'
         } else if (b.node.level === 'planet' || isSel || isHov || cam.scale > 1.5) {
           ctx.fillStyle = b.node.level === 'planet' ? INK : INK_SOFT
-          ctx.font = `italic ${b.node.level === 'planet' ? 12.5 : 11}px ${fontFam}`
+          ctx.font = `italic ${b.node.level === 'planet' ? 14 : 12}px ${fontFam}`
           ctx.textAlign = 'center'
           ctx.fillText(b.node.title, b.x, b.y + vr + 14)
         }

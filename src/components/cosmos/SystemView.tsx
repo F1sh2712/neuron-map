@@ -160,7 +160,7 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
       }
       drawBody(ctx, node.level, cx, cy, cvr, 1)
       ctx.fillStyle = INK
-      ctx.font = `600 15px ${fontFam}`
+      ctx.font = `600 17px ${fontFam}`
       ctx.textAlign = 'center'
       ctx.letterSpacing = '1.5px'
       ctx.fillText(node.title.toUpperCase(), cx, cy + cvr + 26)
@@ -183,7 +183,7 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
           ctx.stroke()
         }
         ctx.fillStyle = o.child.level === 'planet' ? INK : INK_SOFT
-        ctx.font = `italic ${o.child.level === 'planet' ? 13 : 11.5}px ${fontFam}`
+        ctx.font = `italic ${o.child.level === 'planet' ? 14.5 : 12.5}px ${fontFam}`
         ctx.textAlign = 'center'
         ctx.fillText(o.child.title, o.x, o.y + vr + 15)
       }
