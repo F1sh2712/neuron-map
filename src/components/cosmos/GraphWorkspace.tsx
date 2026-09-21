@@ -40,19 +40,19 @@ export function GraphWorkspace({
         {!chatOpen && (
           <button
             onClick={() => setChatOpen(true)}
-            className="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-full px-5 py-2.5 shadow-lg transition-colors"
+            className="absolute bottom-4 right-4 bg-ink text-paper-card tracking-[0.06em] text-sm px-5 py-2.5 shadow-plate hover:bg-ink-soft transition-colors"
           >
-            💬 Ask
+            Ask your universe
           </button>
         )}
       </div>
       {/* Kept mounted while hidden so the conversation survives Hide/Show */}
-      <aside className={`w-96 flex-none border-l border-zinc-900 flex-col ${chatOpen ? 'flex' : 'hidden'}`}>
-        <div className="flex-none flex items-center justify-between px-4 py-2.5 border-b border-zinc-900">
-          <span className="text-sm font-semibold text-white">Ask your universe</span>
+      <aside className={`w-96 flex-none border-l-[1.5px] border-ink flex-col bg-paper-panel ${chatOpen ? 'flex' : 'hidden'}`}>
+        <div className="flex-none flex items-baseline justify-between px-4 py-2.5 border-b-[0.75px] border-ink-line">
+          <span className="font-semibold">Ask your universe</span>
           <button
             onClick={() => setChatOpen(false)}
-            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="text-xs italic text-ink-faded hover:text-ink transition-colors"
           >
             Hide
           </button>

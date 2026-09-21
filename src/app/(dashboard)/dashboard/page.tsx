@@ -4,10 +4,10 @@ import { db } from '@/lib/db'
 import { DeleteDocumentButton } from '@/components/DeleteDocumentButton'
 
 const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: 'Pending', cls: 'text-zinc-400 bg-zinc-800' },
-  PROCESSING: { label: 'Processing', cls: 'text-violet-300 bg-violet-950' },
-  DONE: { label: 'Ready', cls: 'text-green-400 bg-green-950' },
-  FAILED: { label: 'Failed', cls: 'text-red-400 bg-red-950' },
+  PENDING: { label: 'Awaiting survey', cls: 'text-ink-faded border-ink-line' },
+  PROCESSING: { label: 'Being drawn', cls: 'text-gilt border-gilt' },
+  DONE: { label: 'Charted', cls: 'text-ink border-ink' },
+  FAILED: { label: 'Failed', cls: 'text-vermilion border-vermilion' },
 }
 
 export default async function DashboardPage() {
@@ -29,31 +29,35 @@ export default async function DashboardPage() {
     <div className="max-w-3xl mx-auto w-full px-6 py-10">
       <div className="flex items-end justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Your documents</h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            Welcome back, <span className="text-violet-400">{displayName}</span>
+          <h1 className="text-2xl font-semibold">Your documents</h1>
+          <p className="text-sm italic text-ink-faded mt-1">
+            Welcome back, <span className="text-ink not-italic">{displayName}</span>
           </p>
         </div>
         <Link
           href="/upload"
-          className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors"
+          className="bg-ink text-paper-card tracking-[0.06em] text-sm px-5 py-2.5 shadow-plate-sm hover:bg-ink-soft transition-colors"
         >
-          + Upload notes
+          Chart new notes
         </Link>
       </div>
 
       {documents.length === 0 ? (
-        <div className="border-2 border-dashed border-zinc-800 rounded-2xl p-14 text-center">
-          <div className="text-4xl mb-3">🌌</div>
-          <p className="text-zinc-300 font-medium mb-1">Your knowledge universe is empty</p>
-          <p className="text-sm text-zinc-500 mb-5">
-            Upload your first Markdown notes and AI will map them into stars, planets and asteroids.
+        <div className="border-[1.5px] border-ink bg-paper-card shadow-plate p-14 text-center">
+          <svg viewBox="0 0 48 48" className="w-12 h-12 mx-auto mb-4" aria-hidden="true">
+            <path d="M 24 6 L 27 21 L 42 24 L 27 27 L 24 42 L 21 27 L 6 24 L 21 21 Z" fill="none" stroke="#43301a" strokeWidth="1.4"></path>
+            <circle cx="24" cy="24" r="21" fill="none" stroke="#8a744e" strokeWidth="0.6"></circle>
+          </svg>
+          <p className="font-semibold mb-1">Your atlas has no charts yet</p>
+          <p className="text-sm text-ink-soft mb-6 max-w-sm mx-auto">
+            Upload your first Markdown notes and AI will draw them into stars,
+            planets and moons.
           </p>
           <Link
             href="/upload"
-            className="inline-block bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg px-5 py-2.5 transition-colors"
+            className="inline-block bg-ink text-paper-card tracking-[0.06em] text-sm px-6 py-2.5 shadow-plate-sm hover:bg-ink-soft transition-colors"
           >
-            Upload your first notes
+            Chart your first notes
           </Link>
         </div>
       ) : (
@@ -64,24 +68,24 @@ export default async function DashboardPage() {
             return (
               <div
                 key={doc.id}
-                className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-4"
+                className="flex items-center justify-between bg-paper-card border border-ink shadow-plate-sm px-5 py-4"
               >
                 <div className="min-w-0">
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium text-white truncate">{doc.title}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-semibold truncate">{doc.title}</span>
+                    <span className={`text-xs italic border px-2 py-0.5 ${st.cls}`}>{st.label}</span>
                   </div>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    {doc._count.nodes} nodes · {new Date(doc.createdAt).toLocaleDateString('en-AU')}
+                  <p className="text-xs italic text-ink-faded mt-1.5">
+                    {doc._count.nodes} bodies, surveyed {new Date(doc.createdAt).toLocaleDateString('en-AU')}
                   </p>
                 </div>
-                <div className="flex-none flex items-center gap-4">
+                <div className="flex-none flex items-baseline gap-5">
                   {ready && (
                     <Link
                       href={`/graph/${doc.id}`}
-                      className="text-sm text-violet-400 hover:text-violet-300 font-medium transition-colors"
+                      className="text-sm border-b border-ink-line hover:text-vermilion transition-colors"
                     >
-                      View graph →
+                      Open chart
                     </Link>
                   )}
                   <DeleteDocumentButton id={doc.id} title={doc.title} />

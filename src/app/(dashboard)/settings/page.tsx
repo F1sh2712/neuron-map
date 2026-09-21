@@ -6,7 +6,7 @@ import { getPasswordStrength, MIN_STRENGTH, WEAK_PASSWORD_MESSAGE } from '@/lib/
 import { PasswordStrengthBar } from '@/components/PasswordStrengthBar'
 
 const inputClass =
-  'w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent'
+  'w-full bg-paper border border-ink-line px-3 py-2 text-[15px] text-ink placeholder:text-ink-line placeholder:italic focus:outline-none focus:border-vermilion'
 
 export default function SettingsPage() {
   const [email, setEmail] = useState('')
@@ -52,21 +52,21 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-lg w-full mx-auto px-6 py-10">
-      <h1 className="text-xl font-bold text-white mb-8">Settings</h1>
+      <h1 className="text-2xl font-semibold mb-8">Settings</h1>
 
       <section className="mb-10">
-        <h2 className="text-xs uppercase tracking-widest text-zinc-500 mb-3">Account</h2>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm">
-          <span className="text-zinc-500">Email</span>
-          <span className="text-zinc-200 float-right">{email || '…'}</span>
+        <h2 className="italic text-ink-faded mb-3">Account</h2>
+        <div className="bg-paper-card border border-ink-line px-4 py-3 text-sm">
+          <span className="italic text-ink-faded">Email</span>
+          <span className="float-right">{email || '…'}</span>
         </div>
       </section>
 
       <section>
-        <h2 className="text-xs uppercase tracking-widest text-zinc-500 mb-3">Change password</h2>
-        <form onSubmit={changePassword} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col gap-4">
+        <h2 className="italic text-ink-faded mb-3">Change password</h2>
+        <form onSubmit={changePassword} className="bg-paper-card border border-ink shadow-plate-sm p-5 flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">New password</label>
+            <label className="block text-sm text-ink-soft mb-1.5">New password</label>
             <input
               type="password"
               value={password}
@@ -78,7 +78,7 @@ export default function SettingsPage() {
             <PasswordStrengthBar password={password} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">Confirm new password</label>
+            <label className="block text-sm text-ink-soft mb-1.5">Confirm new password</label>
             <input
               type="password"
               value={confirm}
@@ -89,19 +89,19 @@ export default function SettingsPage() {
             />
           </div>
           {error && (
-            <p className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-sm text-vermilion border border-vermilion/60 bg-vermilion/5 px-3 py-2">{error}</p>
           )}
           {success && (
-            <p className="text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900 rounded-lg px-3 py-2">
+            <p className="text-sm text-[#4a6741] border border-[#4a6741]/60 bg-[#4a6741]/5 px-3 py-2">
               {success}
             </p>
           )}
           <button
             type="submit"
             disabled={!password || !confirm || loading}
-            className="self-start bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg px-5 py-2 text-sm transition-colors"
+            className="self-start bg-ink text-paper-card tracking-[0.06em] text-sm px-5 py-2 shadow-plate-sm hover:bg-ink-soft disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Saving...' : 'Update password'}
+            {loading ? 'Saving…' : 'Update password'}
           </button>
         </form>
       </section>

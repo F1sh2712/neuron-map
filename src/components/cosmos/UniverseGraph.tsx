@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { INK, INK_SOFT, INK_LINE, VERMILION, GILT, paintPaper, traceStar8, visualRFor, drawBody, levelWord } from './engraving'
 
 export type UniverseNode = {
   id: string
@@ -39,10 +40,10 @@ type Body = {
   r: number
 }
 
-const STYLE: Record<string, { color: string; glow: string; r: number }> = {
-  star: { color: '#fbbf24', glow: 'rgba(251,191,36,0.5)', r: 18 },
-  planet: { color: '#a78bfa', glow: 'rgba(167,139,250,0.4)', r: 11 },
-  asteroid: { color: '#a1a1aa', glow: 'rgba(161,161,170,0.3)', r: 6 },
+const STYLE: Record<string, { r: number }> = {
+  star: { r: 18 },
+  planet: { r: 11 },
+  asteroid: { r: 6 },
 }
 
 const MIN_ZOOM = 0.25
@@ -231,12 +232,15 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
       laneCount.set(key, lane)
     }
 
-    const stardust = Array.from({ length: 160 }, () => ({
+    // Faint ink specks, like foxing on old paper.
+    const specks = Array.from({ length: 90 }, () => ({
       x: Math.random(),
       y: Math.random(),
-      r: Math.random() * 1.2 + 0.2,
-      a: Math.random() * 0.5 + 0.2,
+      r: Math.random() * 1 + 0.4,
     }))
+
+    // Canvas text cannot use CSS variables — read the resolved Garamond stack.
+    const fontFam = getComputedStyle(canvas).fontFamily || 'Georgia, serif'
 
     // --- Semantic zoom visibility ---
     function isVisible(b: Body): boolean {
@@ -303,7 +307,8 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
       } else {
         const w = toWorld(s)
         hovered = bodyAt(w.x, w.y)
-        canvas.style.cursor = hovered ? 'pointer' : 'grab'
+        // Empty string falls back to the quill cursor class on the canvas.
+        canvas.style.cursor = hovered ? 'pointer' : ''
         // Prefetch the system route on hover so the click-through feels instant.
         if (hovered && hovered.node.level === 'star' && lastPrefetched !== hovered.node.id) {
           lastPrefetched = hovered.node.id
@@ -351,16 +356,13 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
     function frame() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, W, H)
-      ctx.fillStyle = '#09090b'
-      ctx.fillRect(0, 0, W, H)
-      for (const s of stardust) {
-        ctx.globalAlpha = s.a
-        ctx.fillStyle = '#ffffff'
+      paintPaper(ctx, W, H)
+      ctx.fillStyle = 'rgba(107, 86, 55, 0.16)'
+      for (const s of specks) {
         ctx.beginPath()
         ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2)
         ctx.fill()
       }
-      ctx.globalAlpha = 1
 
       ctx.setTransform(dpr * cam.scale, 0, 0, dpr * cam.scale, dpr * cam.ox, dpr * cam.oy)
 
@@ -372,26 +374,32 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
         }
       }
 
-      // galaxy nebula glow (always, strongest when zoomed out)
+      // each document's region: a soft sepia wash inside a fine engraved boundary
       for (const gc of galaxyCenters.values()) {
-        const nebula = ctx.createRadialGradient(gc.x, gc.y, 0, gc.x, gc.y, gc.radius * 1.15)
-        nebula.addColorStop(0, 'rgba(139,92,246,0.10)')
-        nebula.addColorStop(0.7, 'rgba(139,92,246,0.04)')
-        nebula.addColorStop(1, 'rgba(0,0,0,0)')
-        ctx.fillStyle = nebula
+        const wash = ctx.createRadialGradient(gc.x, gc.y, 0, gc.x, gc.y, gc.radius * 1.12)
+        wash.addColorStop(0, 'rgba(169, 127, 38, 0.05)')
+        wash.addColorStop(1, 'rgba(169, 127, 38, 0)')
+        ctx.fillStyle = wash
         ctx.beginPath()
-        ctx.arc(gc.x, gc.y, gc.radius * 1.15, 0, Math.PI * 2)
+        ctx.arc(gc.x, gc.y, gc.radius * 1.12, 0, Math.PI * 2)
         ctx.fill()
+        ctx.strokeStyle = 'rgba(138, 116, 78, 0.4)'
+        ctx.setLineDash([2 / cam.scale, 6 / cam.scale])
+        ctx.lineWidth = 0.8 / cam.scale
+        ctx.beginPath()
+        ctx.arc(gc.x, gc.y, gc.radius * 1.12, 0, Math.PI * 2)
+        ctx.stroke()
+        ctx.setLineDash([])
       }
 
-      // Spore-style lanes: static golden lines between galaxy CENTERS with a
+      // Spore-style lanes: gilt threads between galaxy CENTERS with a
       // shared-concept count. Anchored to centers, so they never spin.
       for (const lane of laneCount.values()) {
         const A = galaxyCenters.get(lane.a)!
         const B = galaxyCenters.get(lane.b)!
         ctx.setLineDash([8 / cam.scale, 10 / cam.scale])
-        ctx.strokeStyle = 'rgba(251,191,36,0.45)'
-        ctx.lineWidth = Math.min(1 + lane.count * 0.4, 4) / cam.scale
+        ctx.strokeStyle = GILT
+        ctx.lineWidth = Math.min(1 + lane.count * 0.35, 3.5) / cam.scale
         ctx.beginPath()
         ctx.moveTo(A.x, A.y)
         ctx.lineTo(B.x, B.y)
@@ -399,16 +407,16 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
         ctx.setLineDash([])
         const mx = (A.x + B.x) / 2
         const my = (A.y + B.y) / 2
-        ctx.fillStyle = 'rgba(251,191,36,0.9)'
-        ctx.font = `600 ${12 / cam.scale}px system-ui, sans-serif`
+        ctx.fillStyle = GILT
+        ctx.font = `italic ${13 / cam.scale}px ${fontFam}`
         ctx.textAlign = 'center'
-        ctx.fillText(`${lane.count} shared`, mx, my - 6 / cam.scale)
+        ctx.fillText(`${lane.count} shared`, mx, my - 7 / cam.scale)
       }
 
       // in-galaxy structure only appears once you are close enough
       if (cam.scale >= SHOW_PLANETS) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.05)'
-        ctx.lineWidth = 1 / cam.scale
+        ctx.strokeStyle = 'rgba(107, 86, 55, 0.45)'
+        ctx.lineWidth = 0.8 / cam.scale
         for (const b of bodies) {
           if (b.parent && !b.pinned && isVisible(b)) {
             ctx.beginPath()
@@ -421,17 +429,24 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
             const a = bodyById.get(e.fromNodeId)
             const c = bodyById.get(e.toNodeId)
             if (!a || !c || !isVisible(a) || !isVisible(c)) continue
-            ctx.strokeStyle = e.relationType === 'contains' ? 'rgba(255,255,255,0.05)' : 'rgba(139,92,246,0.15)'
-            ctx.lineWidth = 1 / cam.scale
+            if (e.relationType === 'contains') {
+              ctx.strokeStyle = 'rgba(138, 116, 78, 0.3)'
+              ctx.setLineDash([1.5 / cam.scale, 4 / cam.scale])
+            } else {
+              ctx.strokeStyle = 'rgba(179, 58, 34, 0.35)'
+              ctx.setLineDash([4 / cam.scale, 5 / cam.scale])
+            }
+            ctx.lineWidth = 0.9 / cam.scale
             ctx.beginPath()
             ctx.moveTo(a.x, a.y)
             ctx.lineTo(c.x, c.y)
             ctx.stroke()
           }
         }
+        ctx.setLineDash([])
       }
 
-      // Selected node's own threads: the ONLY node-level golden lines drawn.
+      // Selected node's own threads: the ONLY node-level gilt lines drawn.
       const selId = selectedRef.current
       if (selId) {
         for (const l of links) {
@@ -440,8 +455,8 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
           const c = bodyById.get(l.toNodeId)
           if (!a || !c) continue
           ctx.setLineDash([4 / cam.scale, 6 / cam.scale])
-          ctx.strokeStyle = 'rgba(251,191,36,0.8)'
-          ctx.lineWidth = 1.6 / cam.scale
+          ctx.strokeStyle = GILT
+          ctx.lineWidth = 1.5 / cam.scale
           ctx.beginPath()
           ctx.moveTo(a.x, a.y)
           ctx.lineTo(c.x, c.y)
@@ -453,33 +468,23 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
       // bodies
       for (const b of bodies) {
         if (!isVisible(b)) continue
-        const st = styleFor(b.node.level)
         const isSel = selId === b.node.id
         const isHov = hovered?.node.id === b.node.id
-        const glowR = b.r * (b.node.level === 'star' ? 2.6 : 2)
-        const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, glowR)
-        grad.addColorStop(0, st.glow)
-        grad.addColorStop(1, 'rgba(0,0,0,0)')
-        ctx.fillStyle = grad
-        ctx.beginPath()
-        ctx.arc(b.x, b.y, glowR, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = st.color
-        ctx.beginPath()
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2)
-        ctx.fill()
+        const vr = visualRFor(b.node.level, b.r)
+
+        drawBody(ctx, b.node.level, b.x, b.y, vr, cam.scale)
+
         if (linkedIds.has(b.node.id)) {
-          ctx.strokeStyle = 'rgba(251,191,36,0.9)'
-          ctx.lineWidth = 1.5 / cam.scale
-          ctx.beginPath()
-          ctx.arc(b.x, b.y, b.r + 4, 0, Math.PI * 2)
+          traceStar8(ctx, b.x, b.y, vr + 6)
+          ctx.strokeStyle = GILT
+          ctx.lineWidth = 1.1 / cam.scale
           ctx.stroke()
         }
         if (isSel || isHov) {
-          ctx.strokeStyle = '#ffffff'
-          ctx.lineWidth = 2 / cam.scale
+          ctx.strokeStyle = isSel ? VERMILION : INK_LINE
+          ctx.lineWidth = (isSel ? 1.4 : 1) / cam.scale
           ctx.beginPath()
-          ctx.arc(b.x, b.y, b.r + 3, 0, Math.PI * 2)
+          ctx.arc(b.x, b.y, vr + 5, 0, Math.PI * 2)
           ctx.stroke()
         }
 
@@ -492,20 +497,30 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
           isSel ||
           isHov
         if (showLabel) {
-          ctx.fillStyle = b.node.level === 'star' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.7)'
-          ctx.font = `${b.node.level === 'star' ? '600 ' : ''}${LABEL_SIZE[b.node.level] ?? 9}px system-ui, sans-serif`
           ctx.textAlign = 'center'
-          ctx.fillText(b.node.title, b.x, b.y + b.r + 12)
+          if (b.node.level === 'star') {
+            ctx.fillStyle = INK
+            ctx.font = `600 ${LABEL_SIZE.star}px ${fontFam}`
+            ctx.letterSpacing = '1px'
+            ctx.fillText(b.node.title.toUpperCase(), b.x, b.y + vr + 15)
+            ctx.letterSpacing = '0px'
+          } else {
+            ctx.fillStyle = b.node.level === 'planet' ? INK : INK_SOFT
+            ctx.font = `italic ${LABEL_SIZE[b.node.level] ?? 9}px ${fontFam}`
+            ctx.fillText(b.node.title, b.x, b.y + vr + 12)
+          }
         }
       }
 
       // galaxy labels: constant screen size, dominant when zoomed out
       for (const gc of galaxyCenters.values()) {
-        const size = cam.scale < SHOW_PLANETS ? 16 : 13
-        ctx.fillStyle = cam.scale < SHOW_PLANETS ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)'
-        ctx.font = `600 ${size / cam.scale}px system-ui, sans-serif`
+        const zoomedOut = cam.scale < SHOW_PLANETS
+        ctx.fillStyle = zoomedOut ? INK : 'rgba(107, 86, 55, 0.5)'
+        ctx.font = `600 ${(zoomedOut ? 16 : 13) / cam.scale}px ${fontFam}`
         ctx.textAlign = 'center'
-        ctx.fillText(gc.galaxy.documentTitle, gc.x, gc.y - gc.radius - 26)
+        ctx.letterSpacing = `${2 / cam.scale}px`
+        ctx.fillText(gc.galaxy.documentTitle.toUpperCase(), gc.x, gc.y - gc.radius - 26)
+        ctx.letterSpacing = '0px'
       }
 
       raf = requestAnimationFrame(frame)
@@ -524,32 +539,30 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
 
   return (
     <div className="relative w-full h-full">
-      <canvas ref={canvasRef} className="block w-full h-full" />
-      <div className="absolute bottom-3 left-4 text-xs text-zinc-600 pointer-events-none">
-        Scroll to zoom in for detail · zoom out for the universe · golden lanes = shared concepts
+      <canvas ref={canvasRef} className="block w-full h-full cursor-quill" />
+      <div className="absolute bottom-3 left-4 text-xs italic text-ink-faded pointer-events-none">
+        Draw nearer for detail — pull away for the whole sky — gilt threads join shared ideas
       </div>
       {selected && (
-        <div className="absolute top-4 right-4 w-72 bg-zinc-900/95 border border-zinc-800 rounded-xl p-4 shadow-xl backdrop-blur">
-          <div className="flex items-center gap-2 mb-1">
-            <span>{selected.node.level === 'star' ? '⭐' : selected.node.level === 'planet' ? '🪐' : '☄️'}</span>
-            <span className="font-semibold text-white">{selected.node.title}</span>
+        <div className="absolute top-4 right-4 w-72 bg-paper-card border border-ink shadow-plate p-4">
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="font-semibold">{selected.node.title}</span>
+            <span className="text-xs italic text-ink-faded">{levelWord(selected.node.level)}</span>
           </div>
-          <p className="text-xs text-zinc-500 mb-2">
-            {selected.node.level} · in {selected.galaxy.documentTitle}
-          </p>
-          <p className="text-sm text-zinc-300 leading-relaxed">{selected.node.summary}</p>
-          <div className="mt-3 flex items-center justify-between">
+          <p className="text-xs italic text-ink-faded mb-2">from the chart of {selected.galaxy.documentTitle}</p>
+          <p className="text-sm text-ink-soft leading-relaxed">{selected.node.summary}</p>
+          <div className="mt-3 pt-2.5 border-t border-ink-line/60 flex items-baseline justify-between">
             <button
               onClick={() => setSelected(null)}
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="text-xs italic text-ink-faded hover:text-ink transition-colors"
             >
               Close
             </button>
             <Link
               href={`/graph/${selected.galaxy.documentId}`}
-              className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+              className="text-xs border-b border-ink-line hover:text-vermilion transition-colors"
             >
-              Open this galaxy →
+              Open this chart
             </Link>
           </div>
         </div>

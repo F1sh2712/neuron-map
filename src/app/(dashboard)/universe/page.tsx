@@ -40,30 +40,28 @@ export default async function UniversePage() {
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <header className="flex items-center justify-between px-6 py-3 border-b border-zinc-900">
-        <div>
-          <h1 className="text-lg font-bold text-white leading-none">My Universe</h1>
-          <p className="text-xs text-zinc-500 mt-1">
-            {galaxies.length} galaxies · {totalNodes} nodes · {links.length} golden threads
+      <header className="flex items-baseline justify-between px-7 py-3 border-b-[0.75px] border-ink-line">
+        <div className="flex items-baseline gap-4">
+          <h1 className="text-lg font-semibold leading-none">Your Universe</h1>
+          <p className="text-xs italic text-ink-faded">
+            {galaxies.length} charts, {totalNodes} bodies, {links.length} gilt threads
           </p>
         </div>
-        <div className="flex items-center gap-4 text-xs text-zinc-500">
-          <span>⭐ star</span>
-          <span>🪐 planet</span>
-          <span>☄️ asteroid</span>
-          <span className="text-amber-400/80">— shared concept</span>
-        </div>
+        <p className="text-xs italic text-ink-faded">every document a chart — gilt threads join shared ideas</p>
       </header>
       <div className="flex-1 min-h-0">
         {galaxies.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center gap-4">
-            <div className="text-4xl">🌌</div>
-            <p className="text-zinc-400">Your universe is empty — upload some notes to give birth to your first galaxy.</p>
+            <svg viewBox="0 0 48 48" className="w-12 h-12" aria-hidden="true">
+              <path d="M 24 6 L 27 21 L 42 24 L 27 27 L 24 42 L 21 27 L 6 24 L 21 21 Z" fill="none" stroke="#43301a" strokeWidth="1.4"></path>
+              <circle cx="24" cy="24" r="21" fill="none" stroke="#8a744e" strokeWidth="0.6"></circle>
+            </svg>
+            <p className="italic text-ink-soft">Your universe is empty — upload some notes to draw your first chart.</p>
             <Link
               href="/upload"
-              className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg px-5 py-2.5 transition-colors"
+              className="bg-ink text-paper-card tracking-[0.06em] text-sm px-6 py-2.5 shadow-plate-sm hover:bg-ink-soft transition-colors"
             >
-              Upload notes
+              Chart your notes
             </Link>
           </div>
         ) : (

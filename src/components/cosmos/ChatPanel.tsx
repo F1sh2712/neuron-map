@@ -16,7 +16,7 @@ function renderWithCitations(text: string, onCite: (title: string) => void) {
       <button
         key={i}
         onClick={() => onCite(title)}
-        className="inline-block align-baseline bg-amber-950/50 border border-amber-800/60 text-amber-300 hover:text-amber-100 hover:border-amber-500 rounded px-1.5 mx-0.5 text-[0.85em] transition-colors"
+        className="inline align-baseline text-gilt border-b border-gilt hover:text-vermilion hover:border-vermilion mx-0.5 transition-colors"
       >
         {title}
       </button>
@@ -157,9 +157,9 @@ export function ChatPanel({
             value={activeId ?? ''}
             onChange={(e) => (e.target.value ? switchSession(e.target.value) : newChat())}
             disabled={busy}
-            className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-60"
+            className="flex-1 min-w-0 bg-paper-card border border-ink-line px-2 py-1.5 text-xs text-ink italic focus:outline-none focus:border-ink disabled:opacity-60"
           >
-            <option value="">✨ New conversation</option>
+            <option value="">A new conversation</option>
             {sessions.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.title}
@@ -171,18 +171,18 @@ export function ChatPanel({
               onClick={renameChat}
               disabled={busy}
               title="Rename this conversation"
-              className="flex-none text-xs text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg px-2.5 py-1.5 disabled:opacity-40 transition-colors"
+              className="flex-none text-xs italic text-ink-faded hover:text-ink border border-ink-line hover:border-ink px-2.5 py-1.5 disabled:opacity-40 transition-colors"
             >
-              ✎
+              Rename
             </button>
           )}
           <button
             onClick={newChat}
             disabled={busy || (activeId === null && messages.length === 0)}
             title="Start a new conversation"
-            className="flex-none text-xs text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg px-2.5 py-1.5 disabled:opacity-40 transition-colors"
+            className="flex-none text-xs italic text-ink-faded hover:text-ink border border-ink-line hover:border-ink px-2.5 py-1.5 disabled:opacity-40 transition-colors"
           >
-            + New
+            New
           </button>
         </div>
       )}
@@ -192,21 +192,21 @@ export function ChatPanel({
             <button
               onClick={deleteChat}
               disabled={busy}
-              className="text-[11px] text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
+              className="text-[11px] italic text-ink-line hover:text-vermilion disabled:opacity-50 transition-colors"
             >
               Delete conversation
             </button>
           </div>
         )}
         {messages.length === 0 && (
-          <div className="text-sm text-zinc-500 leading-relaxed pt-4">
-            Ask anything about this universe —<br />
-            <span className="text-zinc-400">&ldquo;How do these concepts connect?&rdquo;</span>
+          <div className="text-sm text-ink-faded leading-relaxed pt-4 italic">
+            Ask anything of this chart —<br />
+            <span className="text-ink-soft">&ldquo;How do these concepts connect?&rdquo;</span>
             <br />
-            <span className="text-zinc-400">&ldquo;Explain the hardest topic simply.&rdquo;</span>
+            <span className="text-ink-soft">&ldquo;Explain the hardest topic simply.&rdquo;</span>
             <br />
-            <span className="text-zinc-600 text-xs mt-2 inline-block">
-              Cited concepts become clickable and light up in the graph.
+            <span className="text-xs mt-2 inline-block">
+              Cited concepts become touchable, and the map travels to them.
             </span>
           </div>
         )}
@@ -215,32 +215,32 @@ export function ChatPanel({
             key={i}
             className={
               m.role === 'user'
-                ? 'bg-violet-950/40 border border-violet-900/50 rounded-xl px-3 py-2 text-sm text-zinc-200 ml-6'
-                : 'bg-zinc-900/80 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-300 mr-2 leading-relaxed whitespace-pre-wrap'
+                ? 'self-end max-w-[85%] border-r-2 border-vermilion pr-3 py-1 text-sm italic text-ink text-right ml-6'
+                : 'bg-paper-card border-[0.75px] border-ink-line px-3.5 py-2.5 text-sm text-ink mr-2 leading-relaxed whitespace-pre-wrap'
             }
           >
             {m.role === 'assistant' ? renderWithCitations(m.content, onCite) : m.content}
             {m.role === 'assistant' && busy && i === messages.length - 1 && (
-              <span className="inline-block w-1.5 h-4 bg-violet-400 align-text-bottom animate-pulse ml-0.5" />
+              <span className="inline-block w-1.5 h-4 bg-gilt align-text-bottom animate-pulse ml-0.5" />
             )}
           </div>
         ))}
       </div>
-      <div className="flex-none border-t border-zinc-900 p-3 flex gap-2">
+      <div className="flex-none border-t-[0.75px] border-ink-line p-3 flex items-end gap-2.5">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && send()}
-          placeholder="Ask your universe..."
+          placeholder="Ask of this chart…"
           disabled={busy}
-          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent disabled:opacity-60"
+          className="flex-1 bg-transparent border-b border-ink px-1 py-2 text-sm text-ink italic placeholder:text-ink-line focus:outline-none focus:border-vermilion disabled:opacity-60"
         />
         <button
           onClick={send}
           disabled={busy || !input.trim()}
-          className="bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-sm font-medium rounded-lg px-4 transition-colors"
+          className="border-[1.5px] border-ink text-sm tracking-[0.08em] px-4 py-1.5 shadow-plate-sm hover:bg-paper-card disabled:opacity-40 transition-colors"
         >
-          {busy ? '…' : 'Ask'}
+          {busy ? '…' : 'ASK'}
         </button>
       </div>
     </div>

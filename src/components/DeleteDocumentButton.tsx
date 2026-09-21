@@ -23,7 +23,7 @@ export function DeleteDocumentButton({ id, title }: { id: string; title: string 
     <button
       onClick={handleDelete}
       disabled={busy}
-      className="text-sm text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
+      className="text-sm italic text-ink-line hover:text-vermilion disabled:opacity-50 transition-colors"
       title="Delete document"
     >
       {busy ? 'Deleting...' : 'Delete'}

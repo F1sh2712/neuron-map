@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { collectContainsDescendants } from '@/lib/extraction'
+import { INK, INK_SOFT, INK_LINE, VERMILION, GILT, paintPaper, traceStar8, visualRFor, drawBody, levelWord } from './engraving'
 
 export type GraphNode = {
   id: string
@@ -36,10 +37,10 @@ type Body = {
   r: number
 }
 
-const STYLE: Record<string, { color: string; glow: string; r: number }> = {
-  star: { color: '#fbbf24', glow: 'rgba(251,191,36,0.55)', r: 26 },
-  planet: { color: '#a78bfa', glow: 'rgba(167,139,250,0.45)', r: 15 },
-  asteroid: { color: '#a1a1aa', glow: 'rgba(161,161,170,0.35)', r: 8 },
+const STYLE: Record<string, { r: number }> = {
+  star: { r: 26 },
+  planet: { r: 15 },
+  asteroid: { r: 8 },
 }
 
 const MIN_ZOOM = 0.3
@@ -47,6 +48,10 @@ const MAX_ZOOM = 3
 
 function styleFor(level: string) {
   return STYLE[level] ?? STYLE.asteroid
+}
+
+function visualR(b: { node: { level: string }; r: number }) {
+  return visualRFor(b.node.level, b.r)
 }
 
 export function CosmicGraph({
@@ -201,12 +206,15 @@ export function CosmicGraph({
 
     const linkedIds = new Set(crossLinks.map((c) => c.nodeId))
 
-    const stardust = Array.from({ length: 120 }, () => ({
+    // Faint ink specks, like foxing on old paper.
+    const specks = Array.from({ length: 70 }, () => ({
       x: Math.random(),
       y: Math.random(),
-      r: Math.random() * 1.2 + 0.2,
-      a: Math.random() * 0.5 + 0.2,
+      r: Math.random() * 1 + 0.4,
     }))
+
+    // Canvas text cannot use CSS variables — read the resolved Garamond stack.
+    const fontFam = getComputedStyle(canvas).fontFamily || 'Georgia, serif'
 
     // --- Interaction state ---
     const cam = cameraRef.current
@@ -289,7 +297,8 @@ export function CosmicGraph({
       } else {
         const w = toWorld(s)
         hovered = bodyAt(w.x, w.y)
-        canvas.style.cursor = hovered ? 'pointer' : 'grab'
+        // Empty string falls back to the quill cursor class on the canvas.
+        canvas.style.cursor = hovered ? 'pointer' : ''
         // Prefetch the system route on hover so the click-through feels instant.
         if (hovered && hovered.node.level !== 'asteroid' && lastPrefetched !== hovered.node.id) {
           lastPrefetched = hovered.node.id
@@ -339,19 +348,16 @@ export function CosmicGraph({
     // --- Render loop ---
     let raf = 0
     function frame() {
-      // screen space: background + starfield
+      // screen space: paper ground with a soft vignette + foxing specks
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, W, H)
-      ctx.fillStyle = '#09090b'
-      ctx.fillRect(0, 0, W, H)
-      for (const s of stardust) {
-        ctx.globalAlpha = s.a
-        ctx.fillStyle = '#ffffff'
+      paintPaper(ctx, W, H)
+      ctx.fillStyle = 'rgba(107, 86, 55, 0.16)'
+      for (const s of specks) {
         ctx.beginPath()
         ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2)
         ctx.fill()
       }
-      ctx.globalAlpha = 1
 
       // world space: apply camera
       ctx.setTransform(dpr * cam.scale, 0, 0, dpr * cam.scale, dpr * cam.ox, dpr * cam.oy)
@@ -387,64 +393,76 @@ export function CosmicGraph({
         }
       }
 
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)'
-      ctx.lineWidth = 1 / cam.scale
+      // orbits: fine engraved double lines
       for (const b of bodies) {
         if (b.parent && !b.pinned) {
+          ctx.strokeStyle = 'rgba(107, 86, 55, 0.55)'
+          ctx.lineWidth = 0.8 / cam.scale
           ctx.beginPath()
           ctx.arc(b.parent.x, b.parent.y, b.orbitRadius, 0, Math.PI * 2)
+          ctx.stroke()
+          ctx.lineWidth = 0.4 / cam.scale
+          ctx.beginPath()
+          ctx.arc(b.parent.x, b.parent.y, b.orbitRadius + 3, 0, Math.PI * 2)
           ctx.stroke()
         }
       }
 
+      // relation lines: containment as faint stipple, other relations in vermilion
       for (const e of edges) {
         const a = bodyById.get(e.fromNodeId)
         const c = bodyById.get(e.toNodeId)
         if (!a || !c) continue
-        ctx.strokeStyle = e.relationType === 'contains' ? 'rgba(255,255,255,0.06)' : 'rgba(139,92,246,0.18)'
-        ctx.lineWidth = (e.relationType === 'contains' ? 1 : 1.2) / cam.scale
+        if (e.relationType === 'contains') {
+          ctx.strokeStyle = 'rgba(138, 116, 78, 0.35)'
+          ctx.setLineDash([1.5 / cam.scale, 4 / cam.scale])
+          ctx.lineWidth = 0.8 / cam.scale
+        } else {
+          ctx.strokeStyle = 'rgba(179, 58, 34, 0.4)'
+          ctx.setLineDash([4 / cam.scale, 5 / cam.scale])
+          ctx.lineWidth = 1 / cam.scale
+        }
         ctx.beginPath()
         ctx.moveTo(a.x, a.y)
         ctx.lineTo(c.x, c.y)
         ctx.stroke()
       }
+      ctx.setLineDash([])
 
       for (const b of bodies) {
-        const st = styleFor(b.node.level)
         const isSel = selectedRef.current?.id === b.node.id
         const isHov = hovered?.node.id === b.node.id
-        const glowR = b.r * (b.node.level === 'star' ? 3 : 2.2)
-        const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, glowR)
-        grad.addColorStop(0, st.glow)
-        grad.addColorStop(1, 'rgba(0,0,0,0)')
-        ctx.fillStyle = grad
-        ctx.beginPath()
-        ctx.arc(b.x, b.y, glowR, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = st.color
-        ctx.beginPath()
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2)
-        ctx.fill()
-        // golden ring: this concept also appears in another document
+        const vr = visualR(b)
+
+        drawBody(ctx, b.node.level, b.x, b.y, vr, cam.scale)
+
+        // gilt star: this concept also appears in another document
         if (linkedIds.has(b.node.id)) {
-          ctx.strokeStyle = 'rgba(251,191,36,0.9)'
-          ctx.lineWidth = 1.5 / cam.scale
-          ctx.beginPath()
-          ctx.arc(b.x, b.y, b.r + 5, 0, Math.PI * 2)
+          traceStar8(ctx, b.x, b.y, vr + 8)
+          ctx.strokeStyle = GILT
+          ctx.lineWidth = 1.2 / cam.scale
           ctx.stroke()
         }
         if (isSel || isHov) {
-          ctx.strokeStyle = '#ffffff'
-          ctx.lineWidth = 2 / cam.scale
+          ctx.strokeStyle = isSel ? VERMILION : INK_LINE
+          ctx.lineWidth = (isSel ? 1.4 : 1) / cam.scale
           ctx.beginPath()
-          ctx.arc(b.x, b.y, b.r + 3, 0, Math.PI * 2)
+          ctx.arc(b.x, b.y, vr + 6, 0, Math.PI * 2)
           ctx.stroke()
         }
-        if (b.node.level !== 'asteroid' || isSel || isHov || cam.scale > 1.5) {
-          ctx.fillStyle = 'rgba(255,255,255,0.85)'
-          ctx.font = `${b.node.level === 'star' ? 13 : 11}px system-ui, sans-serif`
+
+        if (b.node.level === 'star') {
+          ctx.fillStyle = INK
+          ctx.font = `600 13px ${fontFam}`
           ctx.textAlign = 'center'
-          ctx.fillText(b.node.title, b.x, b.y + b.r + 14)
+          ctx.letterSpacing = '1.5px'
+          ctx.fillText(b.node.title.toUpperCase(), b.x, b.y + vr + 17)
+          ctx.letterSpacing = '0px'
+        } else if (b.node.level === 'planet' || isSel || isHov || cam.scale > 1.5) {
+          ctx.fillStyle = b.node.level === 'planet' ? INK : INK_SOFT
+          ctx.font = `italic ${b.node.level === 'planet' ? 12.5 : 11}px ${fontFam}`
+          ctx.textAlign = 'center'
+          ctx.fillText(b.node.title, b.x, b.y + vr + 14)
         }
       }
 
@@ -484,20 +502,19 @@ export function CosmicGraph({
 
   return (
     <div className="relative w-full h-full">
-      <canvas ref={canvasRef} className="block w-full h-full" />
-      <div className="absolute bottom-3 left-4 text-xs text-zinc-600 pointer-events-none">
-        Scroll to zoom · drag space to pan · drag a body to move it
+      <canvas ref={canvasRef} className="block w-full h-full cursor-quill" />
+      <div className="absolute bottom-3 left-4 text-xs italic text-ink-faded pointer-events-none">
+        Drag to wander — scroll to draw nearer — touch a body to read of it
       </div>
       {selected && (
-        <div className="absolute top-4 right-4 w-72 bg-zinc-900/95 border border-zinc-800 rounded-xl p-4 shadow-xl backdrop-blur">
-          <div className="flex items-center gap-2 mb-2">
-            <span>{selected.level === 'star' ? '⭐' : selected.level === 'planet' ? '🪐' : '☄️'}</span>
-            <span className="font-semibold text-white">{selected.title}</span>
+        <div className="absolute top-4 right-4 w-72 bg-paper-card border border-ink shadow-plate p-4">
+          <div className="flex items-baseline justify-between mb-1.5">
+            <span className="font-semibold">{selected.title}</span>
+            <span className="text-xs italic text-ink-faded">{levelWord(selected.level)}</span>
           </div>
-          <p className="text-xs text-zinc-500 mb-2">{selected.level}</p>
-          <p className="text-sm text-zinc-300 leading-relaxed">{selected.summary}</p>
+          <p className="text-sm text-ink-soft leading-relaxed">{selected.summary}</p>
           {selected.sourceHeading && (
-            <p className="text-xs text-zinc-600 mt-3">Source: {selected.sourceHeading}</p>
+            <p className="text-xs italic text-ink-faded mt-3">From the heading “{selected.sourceHeading}”</p>
           )}
           {(() => {
             const appearsIn = [
@@ -509,33 +526,33 @@ export function CosmicGraph({
             ]
             if (appearsIn.length === 0) return null
             return (
-              <div className="mt-3 pt-3 border-t border-zinc-800">
-                <p className="text-xs text-amber-400/90 mb-1.5">🔗 Also appears in</p>
+              <div className="mt-3 pt-3 border-t border-ink-line/60">
+                <p className="text-xs italic text-gilt mb-1.5">Also charted in</p>
                 {appearsIn.map((c) => (
                   <Link
                     key={c.documentId}
                     href={`/graph/${c.documentId}`}
-                    className="block text-sm text-zinc-300 hover:text-amber-300 transition-colors truncate"
+                    className="block text-sm border-b border-transparent hover:text-vermilion transition-colors truncate"
                   >
-                    {c.documentTitle} →
+                    {c.documentTitle}
                   </Link>
                 ))}
               </div>
             )
           })()}
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-3 pt-2.5 border-t border-ink-line/60 flex items-baseline justify-between">
             <button
               onClick={() => setSelected(null)}
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="text-xs italic text-ink-faded hover:text-ink transition-colors"
             >
               Close
             </button>
             <button
               onClick={deleteSelected}
               disabled={deleting}
-              className="text-xs text-zinc-600 hover:text-red-400 disabled:opacity-50 transition-colors"
+              className="text-xs italic text-ink-line hover:text-vermilion disabled:opacity-50 transition-colors"
             >
-              {deleting ? 'Deleting...' : 'Delete node'}
+              {deleting ? 'Striking out…' : 'Strike out'}
             </button>
           </div>
         </div>

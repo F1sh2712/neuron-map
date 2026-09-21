@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { INK, INK_SOFT, INK_LINE, VERMILION, paintPaper, visualRFor, drawBody, levelWord } from './engraving'
+import { LevelMark } from '@/components/LevelMark'
 
 type SysNode = { id: string; title: string; summary: string; level: string }
 type SysChild = SysNode & { children: SysNode[] }
@@ -14,16 +16,10 @@ type Props = {
   children: SysChild[]
 }
 
-const STYLE: Record<string, { color: string; glow: string; r: number }> = {
-  star: { color: '#fbbf24', glow: 'rgba(251,191,36,0.55)', r: 34 },
-  planet: { color: '#a78bfa', glow: 'rgba(167,139,250,0.45)', r: 16 },
-  asteroid: { color: '#a1a1aa', glow: 'rgba(161,161,170,0.35)', r: 8 },
-}
+const HIT_R: Record<string, number> = { star: 34, planet: 16, asteroid: 8 }
 
-const ICON: Record<string, string> = { star: '⭐', planet: '🪐', asteroid: '☄️' }
-
-function styleFor(level: string) {
-  return STYLE[level] ?? STYLE.asteroid
+function hitR(level: string) {
+  return HIT_R[level] ?? HIT_R.asteroid
 }
 
 export function SystemView({ document: doc, node, parent, children }: Props) {
@@ -58,7 +54,7 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
 
     const cx = W / 2
     const cy = H / 2
-    const center = { x: cx, y: cy, r: styleFor(node.level).r }
+    const centerR = hitR(node.level)
 
     type Orbiter = {
       child: SysChild
@@ -79,15 +75,18 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
       angle: (i / Math.max(children.length, 1)) * Math.PI * 2,
       x: 0,
       y: 0,
-      r: styleFor(c.level).r,
+      r: hitR(c.level),
     }))
 
-    const stardust = Array.from({ length: 90 }, () => ({
+    // Faint ink specks, like foxing on old paper.
+    const specks = Array.from({ length: 60 }, () => ({
       x: Math.random(),
       y: Math.random(),
-      r: Math.random() * 1.2 + 0.2,
-      a: Math.random() * 0.5 + 0.2,
+      r: Math.random() * 1 + 0.4,
     }))
+
+    // Canvas text cannot use CSS variables — read the resolved Garamond stack.
+    const fontFam = getComputedStyle(canvas).fontFamily || 'Georgia, serif'
 
     let hovered: Orbiter | null = null
 
@@ -104,7 +103,8 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
     function onMove(e: MouseEvent) {
       const p = toLocal(e)
       hovered = orbiterAt(p.x, p.y)
-      canvas.style.cursor = hovered ? 'pointer' : 'default'
+      // Empty string falls back to the quill cursor class on the canvas.
+      canvas.style.cursor = hovered ? 'pointer' : ''
     }
     function onClick(e: MouseEvent) {
       const p = toLocal(e)
@@ -126,74 +126,66 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
     let raf = 0
     function frame() {
       ctx.clearRect(0, 0, W, H)
-      ctx.fillStyle = '#09090b'
-      ctx.fillRect(0, 0, W, H)
-      for (const s of stardust) {
-        ctx.globalAlpha = s.a
-        ctx.fillStyle = '#ffffff'
+      paintPaper(ctx, W, H)
+      ctx.fillStyle = 'rgba(107, 86, 55, 0.16)'
+      for (const s of specks) {
         ctx.beginPath()
         ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2)
         ctx.fill()
       }
-      ctx.globalAlpha = 1
 
-      // orbits
-      ctx.strokeStyle = 'rgba(255,255,255,0.07)'
-      ctx.lineWidth = 1
+      // orbits: fine engraved double lines
       for (const o of orbiters) {
+        ctx.strokeStyle = 'rgba(107, 86, 55, 0.55)'
+        ctx.lineWidth = 0.8
         ctx.beginPath()
         ctx.arc(cx, cy, o.orbitRadius, 0, Math.PI * 2)
         ctx.stroke()
+        ctx.lineWidth = 0.4
+        ctx.beginPath()
+        ctx.arc(cx, cy, o.orbitRadius + 3, 0, Math.PI * 2)
+        ctx.stroke()
       }
 
-      // center body
-      const cst = styleFor(node.level)
-      const cGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, center.r * 2.6)
-      cGlow.addColorStop(0, cst.glow)
-      cGlow.addColorStop(1, 'rgba(0,0,0,0)')
-      ctx.fillStyle = cGlow
-      ctx.beginPath()
-      ctx.arc(cx, cy, center.r * 2.6, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.fillStyle = cst.color
-      ctx.beginPath()
-      ctx.arc(cx, cy, center.r, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.fillStyle = 'rgba(255,255,255,0.95)'
-      ctx.font = '600 15px system-ui, sans-serif'
+      // center body with radiating engraving strokes
+      const cvr = visualRFor(node.level, centerR)
+      ctx.strokeStyle = INK_LINE
+      ctx.lineWidth = 0.6
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4 + Math.PI / 8
+        ctx.beginPath()
+        ctx.moveTo(cx + (cvr + 8) * Math.cos(a), cy + (cvr + 8) * Math.sin(a))
+        ctx.lineTo(cx + (cvr + 16) * Math.cos(a), cy + (cvr + 16) * Math.sin(a))
+        ctx.stroke()
+      }
+      drawBody(ctx, node.level, cx, cy, cvr, 1)
+      ctx.fillStyle = INK
+      ctx.font = `600 15px ${fontFam}`
       ctx.textAlign = 'center'
-      ctx.fillText(node.title, cx, cy + center.r + 22)
+      ctx.letterSpacing = '1.5px'
+      ctx.fillText(node.title.toUpperCase(), cx, cy + cvr + 26)
+      ctx.letterSpacing = '0px'
 
       // orbiters
       for (const o of orbiters) {
         o.angle += o.orbitSpeed
         o.x = cx + o.orbitRadius * Math.cos(o.angle)
         o.y = cy + o.orbitRadius * Math.sin(o.angle)
-        const st = styleFor(o.child.level)
         const isSel = selectedRef.current === o.child.id
         const isHov = hovered === o
-        const glow = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r * 2.2)
-        glow.addColorStop(0, st.glow)
-        glow.addColorStop(1, 'rgba(0,0,0,0)')
-        ctx.fillStyle = glow
-        ctx.beginPath()
-        ctx.arc(o.x, o.y, o.r * 2.2, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = st.color
-        ctx.beginPath()
-        ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2)
-        ctx.fill()
+        const vr = visualRFor(o.child.level, o.r)
+        drawBody(ctx, o.child.level, o.x, o.y, vr, 1)
         if (isSel || isHov) {
-          ctx.strokeStyle = '#ffffff'
-          ctx.lineWidth = 2
+          ctx.strokeStyle = isSel ? VERMILION : INK_LINE
+          ctx.lineWidth = isSel ? 1.4 : 1
           ctx.beginPath()
-          ctx.arc(o.x, o.y, o.r + 3, 0, Math.PI * 2)
+          ctx.arc(o.x, o.y, vr + 6, 0, Math.PI * 2)
           ctx.stroke()
         }
-        ctx.fillStyle = 'rgba(255,255,255,0.8)'
-        ctx.font = `${o.child.level === 'planet' ? 11 : 10}px system-ui, sans-serif`
+        ctx.fillStyle = o.child.level === 'planet' ? INK : INK_SOFT
+        ctx.font = `italic ${o.child.level === 'planet' ? 13 : 11.5}px ${fontFam}`
         ctx.textAlign = 'center'
-        ctx.fillText(o.child.title, o.x, o.y + o.r + 13)
+        ctx.fillText(o.child.title, o.x, o.y + vr + 15)
       }
 
       raf = requestAnimationFrame(frame)
@@ -208,77 +200,76 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
     }
   }, [node, children, router])
 
-  const childNoun = node.level === 'star' ? 'Planets' : 'Asteroids'
+  const childNoun = node.level === 'star' ? 'Planets' : 'Moons'
 
   return (
     <div className="flex-1 min-h-0 flex">
-      {/* left: the system canvas */}
+      {/* left: the system chart */}
       <div className="flex-1 min-w-0 relative">
-        <canvas ref={canvasRef} className="block w-full h-full" />
+        <canvas ref={canvasRef} className="block w-full h-full cursor-quill" />
         <Link
           href={parent ? `/system/${parent.id}` : '/universe'}
-          className="absolute top-4 left-4 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg px-4 py-2 bg-zinc-950/70 backdrop-blur transition-colors"
+          className="absolute top-4 left-4 text-sm border-[1.5px] border-ink px-4 py-2 bg-paper/80 shadow-plate-sm hover:bg-paper-card transition-colors"
         >
           ← {parent ? parent.title : 'Universe'}
         </Link>
-        <div className="absolute bottom-3 left-4 text-xs text-zinc-600 pointer-events-none">
-          {node.level === 'star' ? 'Click a planet to enter its system' : 'Click an asteroid for details'}
+        <div className="absolute bottom-3 left-4 text-xs italic text-ink-faded pointer-events-none">
+          {node.level === 'star' ? 'Touch a planet to enter its system' : 'Touch a moon to read of it'}
         </div>
       </div>
 
       {/* right: knowledge panel */}
-      <aside className="w-96 flex-none border-l border-zinc-900 overflow-y-auto p-6">
+      <aside className="w-96 flex-none border-l-[1.5px] border-ink bg-paper-panel overflow-y-auto p-6">
         {/* breadcrumb */}
-        <nav className="text-xs text-zinc-500 mb-5 flex items-center gap-1.5 flex-wrap">
-          <Link href="/universe" className="hover:text-zinc-300 transition-colors">Universe</Link>
+        <nav className="text-xs italic text-ink-faded mb-5 flex items-baseline gap-1.5 flex-wrap">
+          <Link href="/universe" className="hover:text-ink transition-colors">Universe</Link>
           <span>/</span>
-          <Link href={`/graph/${doc.id}`} className="hover:text-zinc-300 transition-colors">{doc.title}</Link>
+          <Link href={`/graph/${doc.id}`} className="hover:text-ink transition-colors">{doc.title}</Link>
           {parent && (
             <>
               <span>/</span>
-              <Link href={`/system/${parent.id}`} className="hover:text-zinc-300 transition-colors">
+              <Link href={`/system/${parent.id}`} className="hover:text-ink transition-colors">
                 {parent.title}
               </Link>
             </>
           )}
           <span>/</span>
-          <span className="text-zinc-300">{node.title}</span>
+          <span className="text-ink not-italic">{node.title}</span>
         </nav>
 
         {/* the body itself */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xl">{ICON[node.level] ?? '☄️'}</span>
-          <h1 className="text-xl font-bold text-white">{node.title}</h1>
+        <div className="flex items-center gap-2.5 mb-1.5">
+          <LevelMark level={node.level} className="w-5 h-5 flex-none" />
+          <h1 className="text-xl font-semibold">{node.title}</h1>
         </div>
-        <p className="text-xs text-zinc-500 mb-3">{node.level} · {doc.title}</p>
-        <p className="text-sm text-zinc-300 leading-relaxed">{node.summary}</p>
+        <p className="text-xs italic text-ink-faded mb-3">{levelWord(node.level)}, from {doc.title}</p>
+        <p className="text-sm text-ink-soft leading-relaxed">{node.summary}</p>
 
         {/* children list */}
         {children.length > 0 && (
           <div className="mt-6">
-            <h2 className="text-xs uppercase tracking-widest text-zinc-500 mb-3">{childNoun}</h2>
+            <h2 className="italic text-ink-faded mb-3">{childNoun}</h2>
             <div className="space-y-1.5">
               {children.map((c) => {
                 const isOpen = expanded.has(c.id)
                 const isSelected = selectedChild?.id === c.id
                 return (
-                  <div key={c.id} className={`rounded-lg border ${isSelected ? 'border-violet-700 bg-violet-950/30' : 'border-zinc-800 bg-zinc-900/60'}`}>
+                  <div key={c.id} className={`border ${isSelected ? 'border-vermilion bg-vermilion/5' : 'border-ink-line bg-paper-card'}`}>
                     <div className="flex items-center px-3 py-2.5 gap-2">
                       {c.level === 'planet' ? (
                         <Link
                           href={`/system/${c.id}`}
-                          className="flex-1 min-w-0 flex items-center gap-2 text-sm font-medium text-zinc-200 hover:text-violet-300 transition-colors"
+                          className="flex-1 min-w-0 flex items-center gap-2 text-sm font-medium hover:text-vermilion transition-colors"
                         >
-                          <span>{ICON[c.level]}</span>
+                          <LevelMark level={c.level} />
                           <span className="truncate">{c.title}</span>
-                          <span className="text-zinc-600 text-xs">→</span>
                         </Link>
                       ) : (
                         <button
                           onClick={() => setSelectedChild(isSelected ? null : c)}
-                          className="flex-1 min-w-0 flex items-center gap-2 text-sm font-medium text-zinc-200 hover:text-violet-300 transition-colors text-left"
+                          className="flex-1 min-w-0 flex items-center gap-2 text-sm font-medium hover:text-vermilion transition-colors text-left"
                         >
-                          <span>{ICON[c.level]}</span>
+                          <LevelMark level={c.level} />
                           <span className="truncate">{c.title}</span>
                         </button>
                       )}
@@ -292,7 +283,7 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
                               return next
                             })
                           }
-                          className="flex-none text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-1"
+                          className="flex-none text-xs italic text-ink-faded hover:text-ink transition-colors px-1"
                         >
                           {isOpen ? '▾' : '▸'} {c.children.length}
                         </button>
@@ -301,7 +292,7 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
                     {isOpen && c.children.length > 0 && (
                       <ul className="px-4 pb-2.5 space-y-1">
                         {c.children.map((gc) => (
-                          <li key={gc.id} className="text-xs text-zinc-400 flex items-start gap-1.5">
+                          <li key={gc.id} className="text-xs text-ink-soft flex items-start gap-1.5">
                             <span className="flex-none mt-0.5">·</span>
                             <span>{gc.title}</span>
                           </li>
@@ -315,19 +306,19 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
           </div>
         )}
 
-        {/* selected asteroid detail */}
+        {/* selected moon detail */}
         {selectedChild && (
-          <div className="mt-6 pt-5 border-t border-zinc-800">
-            <div className="flex items-center gap-2 mb-2">
-              <span>{ICON[selectedChild.level] ?? '☄️'}</span>
-              <h3 className="font-semibold text-white">{selectedChild.title}</h3>
+          <div className="mt-6 pt-5 border-t-[0.75px] border-ink-line">
+            <div className="flex items-center gap-2 mb-1.5">
+              <LevelMark level={selectedChild.level} />
+              <h3 className="font-semibold">{selectedChild.title}</h3>
             </div>
-            <p className="text-sm text-zinc-300 leading-relaxed">{selectedChild.summary}</p>
+            <p className="text-sm text-ink-soft leading-relaxed">{selectedChild.summary}</p>
           </div>
         )}
 
         {/* delete this body (and its contains-subtree) */}
-        <div className="mt-8 pt-4 border-t border-zinc-900">
+        <div className="mt-8 pt-4 border-t-[0.75px] border-ink-line">
           <button
             onClick={async () => {
               const subtree = 1 + children.length + children.reduce((s, c) => s + c.children.length, 0)
@@ -344,9 +335,9 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
               router.push(parent ? `/system/${parent.id}` : `/graph/${doc.id}`)
               router.refresh()
             }}
-            className="text-xs text-zinc-600 hover:text-red-400 transition-colors"
+            className="text-xs italic text-ink-line hover:text-vermilion transition-colors"
           >
-            Delete this {node.level} and everything it contains
+            Strike out this {node.level === 'star' ? 'star' : node.level === 'planet' ? 'planet' : 'moon'} and everything it contains
           </button>
         </div>
       </aside>

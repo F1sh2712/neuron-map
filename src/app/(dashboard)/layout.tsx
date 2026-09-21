@@ -12,27 +12,26 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     // Locked to the viewport: the app shell never scrolls. Pages scroll inside
     // the wrapper below; the chat panel scrolls inside its own message list.
-    <div className="h-dvh overflow-hidden bg-zinc-950 flex flex-col">
-      <nav className="flex-none flex items-center justify-between px-6 py-3 border-b border-zinc-900 bg-zinc-950/95 z-20">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <img src="/icon.svg" alt="NeuronMap" className="w-7 h-7 rounded-lg" />
-            <span className="font-bold text-white text-sm">NeuronMap</span>
+    <div className="h-dvh overflow-hidden text-ink flex flex-col">
+      <nav className="flex-none flex items-baseline justify-between px-7 py-3.5 border-b-[1.5px] border-ink z-20">
+        <div className="flex items-baseline gap-8">
+          <Link href="/dashboard" className="font-semibold tracking-[0.2em] hover:text-vermilion transition-colors">
+            NEURONMAP
           </Link>
-          <div className="flex items-center gap-4 text-sm">
-            <Link href="/dashboard" className="text-zinc-400 hover:text-white transition-colors">
+          <div className="flex items-baseline gap-6 text-[15px]">
+            <Link href="/dashboard" className="italic text-ink-faded hover:text-ink transition-colors">
               Documents
             </Link>
-            <Link href="/universe" className="text-zinc-400 hover:text-white transition-colors">
+            <Link href="/universe" className="italic text-ink-faded hover:text-ink transition-colors">
               Universe
             </Link>
-            <Link href="/upload" className="text-zinc-400 hover:text-white transition-colors">
+            <Link href="/upload" className="italic text-ink-faded hover:text-ink transition-colors">
               Upload
             </Link>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="/settings" className="text-sm text-zinc-400 hover:text-white transition-colors">
+        <div className="flex items-baseline gap-6 text-[15px]">
+          <Link href="/settings" className="italic text-ink-faded hover:text-ink transition-colors">
             Settings
           </Link>
           <SignOutButton />

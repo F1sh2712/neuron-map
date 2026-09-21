@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { LevelMark } from '@/components/LevelMark'
 
 type Phase = 'idle' | 'uploading' | 'extracting' | 'done' | 'error'
 
@@ -17,16 +18,16 @@ type Result = {
 
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
-const LEVEL_STYLE: Record<string, { icon: string; color: string }> = {
-  star: { icon: '⭐', color: 'text-yellow-400' },
-  planet: { icon: '🪐', color: 'text-violet-400' },
-  asteroid: { icon: '☄️', color: 'text-zinc-400' },
+const LEVEL_LABEL: Record<string, string> = {
+  star: 'a star',
+  planet: 'a planet',
+  asteroid: 'a moon',
 }
 
 function stageLabel(progress: number): string {
-  if (progress < 25) return 'Reading your notes...'
-  if (progress < 70) return 'AI is identifying concepts and relationships...'
-  if (progress < 100) return 'Building your knowledge graph...'
+  if (progress < 25) return 'Reading your notes…'
+  if (progress < 70) return 'AI is identifying concepts and relationships…'
+  if (progress < 100) return 'Drawing your chart…'
   return 'Done'
 }
 
@@ -124,13 +125,15 @@ export default function UploadPage() {
     <div className="py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white leading-none">Upload study material</h1>
-          <p className="text-sm text-zinc-500 mt-2">Upload Markdown notes and AI extracts the knowledge nodes</p>
+          <h1 className="text-2xl font-semibold leading-none">Chart new notes</h1>
+          <p className="text-sm italic text-ink-faded mt-2.5">
+            Upload Markdown notes and AI will draw every concept onto your atlas
+          </p>
         </div>
 
         <label
-          className={`block border-2 border-dashed rounded-2xl p-10 text-center transition-colors cursor-pointer ${
-            busy ? 'border-zinc-700 opacity-50 pointer-events-none' : 'border-zinc-700 hover:border-violet-500'
+          className={`block border-[1.5px] border-dashed border-ink-line p-10 text-center transition-colors cursor-pointer bg-paper-card/50 ${
+            busy ? 'opacity-50 pointer-events-none' : 'hover:border-ink hover:bg-paper-card'
           }`}
         >
           <input
@@ -143,35 +146,38 @@ export default function UploadPage() {
               if (f) handleFile(f)
             }}
           />
-          <div className="text-4xl mb-3">📝</div>
-          <p className="text-zinc-300 font-medium">Click to choose a Markdown file</p>
-          <p className="text-xs text-zinc-600 mt-1">.md only, up to 5MB</p>
+          <svg viewBox="0 0 48 48" className="w-10 h-10 mx-auto mb-3" aria-hidden="true">
+            <path d="M 8 42 L 13 29 C 18 12 30 5 42 5 C 39 17 28 34 15 37 Z" fill="none" stroke="#43301a" strokeWidth="1.5"></path>
+            <path d="M 10 40 L 26 20" stroke="#8a744e" strokeWidth="1"></path>
+          </svg>
+          <p className="font-semibold">Choose a Markdown file</p>
+          <p className="text-xs italic text-ink-faded mt-1">.md only, up to 5MB</p>
         </label>
 
         {phase === 'uploading' && (
-          <p className="mt-6 text-sm text-violet-400 flex items-center gap-2">
-            <span className="animate-pulse">●</span> Uploading {fileName}...
+          <p className="mt-6 text-sm italic text-ink-soft flex items-center gap-2">
+            <span className="animate-pulse text-gilt">✦</span> Uploading {fileName}…
           </p>
         )}
 
         {phase === 'extracting' && (
           <div className="mt-6">
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-violet-400">{stageLabel(progress)}</span>
-              <span className="text-zinc-500">{progress}%</span>
+              <span className="italic text-ink-soft">{stageLabel(progress)}</span>
+              <span className="text-ink-faded">{progress}%</span>
             </div>
-            <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-ink-line/30 overflow-hidden">
               <div
-                className="h-full bg-violet-500 rounded-full transition-all duration-700"
+                className="h-full bg-gilt transition-all duration-700"
                 style={{ width: `${Math.max(progress, 5)}%` }}
               />
             </div>
-            <p className="text-xs text-zinc-600 mt-2">Usually takes 20-40 seconds</p>
+            <p className="text-xs italic text-ink-faded mt-2">Usually takes 20–40 seconds</p>
           </div>
         )}
 
         {phase === 'error' && (
-          <p className="mt-6 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-3">
+          <p className="mt-6 text-sm text-vermilion border border-vermilion/60 bg-vermilion/5 px-4 py-3">
             {error}
           </p>
         )}
@@ -179,45 +185,42 @@ export default function UploadPage() {
         {phase === 'done' && result && (
           <div className="mt-8">
             <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-4 text-sm">
-                <span className="text-green-400 font-medium">✓ Extraction complete</span>
-                <span className="text-zinc-400">{result.nodeCount} nodes · {result.edgeCount} relationships</span>
+              <div className="flex items-baseline gap-4 text-sm">
+                <span className="font-semibold">Chart complete</span>
+                <span className="italic text-ink-faded">{result.nodeCount} bodies, {result.edgeCount} links</span>
               </div>
               {docId && (
                 <Link
                   href={`/graph/${docId}`}
-                  className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg px-5 py-2.5 transition-colors"
+                  className="bg-ink text-paper-card tracking-[0.06em] text-sm px-5 py-2.5 shadow-plate-sm hover:bg-ink-soft transition-colors"
                 >
-                  View your universe →
+                  Open your chart
                 </Link>
               )}
             </div>
             {result.crossLinks && result.crossLinks.count > 0 && (
-              <div className="mb-4 bg-amber-950/30 border border-amber-900/50 rounded-lg px-4 py-3">
-                <p className="text-sm text-amber-300">
-                  🔗 {result.crossLinks.concepts.length} concept
+              <div className="mb-4 border border-gilt bg-gilt/10 px-4 py-3">
+                <p className="text-sm">
+                  {result.crossLinks.concepts.length} concept
                   {result.crossLinks.concepts.length > 1 ? 's' : ''} also appear in your other
-                  documents: <span className="text-amber-200">{result.crossLinks.concepts.join(', ')}</span>
+                  documents: <span className="font-medium">{result.crossLinks.concepts.join(', ')}</span>
                 </p>
-                <p className="text-xs text-zinc-500 mt-1">
-                  They are marked with a golden ring in the graph.
+                <p className="text-xs italic text-ink-faded mt-1">
+                  They are drawn with a gilt star on the chart.
                 </p>
               </div>
             )}
             <div className="space-y-2">
-              {result.nodes.map((n, i) => {
-                const style = LEVEL_STYLE[n.level] ?? LEVEL_STYLE.asteroid
-                return (
-                  <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span>{style.icon}</span>
-                      <span className="font-medium text-white">{n.title}</span>
-                      <span className={`text-xs ${style.color}`}>{n.level}</span>
-                    </div>
-                    <p className="text-sm text-zinc-400 mt-1">{n.summary}</p>
+              {result.nodes.map((n, i) => (
+                <div key={i} className="bg-paper-card border border-ink-line px-4 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <LevelMark level={n.level} />
+                    <span className="font-semibold">{n.title}</span>
+                    <span className="text-xs italic text-ink-faded">{LEVEL_LABEL[n.level] ?? 'a moon'}</span>
                   </div>
-                )
-              })}
+                  <p className="text-sm text-ink-soft mt-1 leading-relaxed">{n.summary}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}
