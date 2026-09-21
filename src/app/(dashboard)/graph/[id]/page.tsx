@@ -14,12 +14,12 @@ export default async function GraphPage({ params }: { params: Promise<{ id: stri
 
   const nodes = await db.knowledgeNode.findMany({
     where: { documentId: id },
-    select: { id: true, title: true, summary: true, level: true, sourceHeading: true },
+    select: { id: true, title: true, summary: true, level: true, sourceHeading: true, mastery: true },
   })
   const nodeIds = nodes.map((n) => n.id)
   const edges = await db.knowledgeEdge.findMany({
     where: { fromNodeId: { in: nodeIds } },
-    select: { fromNodeId: true, toNodeId: true, relationType: true, weight: true },
+    select: { fromNodeId: true, toNodeId: true, relationType: true, weight: true, origin: true },
   })
 
   // Cross-document links touching this document's nodes; resolve the far
@@ -67,7 +67,22 @@ export default async function GraphPage({ params }: { params: Promise<{ id: stri
             {nodes.length} bodies, {edges.length} links
           </p>
         </div>
-        <p className="text-sm italic text-ink-faded">stars burn gold — planets ringed — moons small</p>
+        {(() => {
+          const mastered = nodes.filter((n) => n.mastery >= 2).length
+          return (
+            <div className="flex items-baseline gap-3">
+              <p className="text-sm italic text-ink-faded">
+                {mastered} of {nodes.length} bodies mastered
+              </p>
+              <div className="w-36 h-1.5 bg-ink-line/30 self-center">
+                <div
+                  className="h-full bg-gilt transition-all"
+                  style={{ width: `${nodes.length ? Math.round((mastered / nodes.length) * 100) : 0}%` }}
+                />
+              </div>
+            </div>
+          )
+        })()}
       </header>
       <GraphWorkspace
         documentId={id}

@@ -39,6 +39,10 @@ model KnowledgeNode {
   summary       String
   level         String   @default("planet")
   sourceHeading String?
+  // 0 = unlearned (sketch), 1 = learning (inked), 2 = mastered (gilt)
+  mastery       Int      @default(0)
+  // "ai" = extracted, "manual" = drawn by the user
+  origin        String   @default("ai")
   createdAt     DateTime @default(now())
 
   document  Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
@@ -72,6 +76,8 @@ model KnowledgeEdge {
   toNodeId     String
   relationType String   @default("related")
   weight       Float    @default(0.5)
+  // "ai" = extracted, "manual" = drawn by the user
+  origin       String   @default("ai")
   createdAt    DateTime @default(now())
 
   fromNode KnowledgeNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)

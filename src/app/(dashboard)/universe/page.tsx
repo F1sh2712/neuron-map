@@ -13,7 +13,7 @@ export default async function UniversePage() {
     where: { userId: user.id, status: 'DONE', nodes: { some: {} } },
     orderBy: { createdAt: 'asc' },
     include: {
-      nodes: { select: { id: true, title: true, summary: true, level: true } },
+      nodes: { select: { id: true, title: true, summary: true, level: true, mastery: true } },
     },
   })
 

@@ -10,6 +10,7 @@ export type UniverseNode = {
   title: string
   summary: string
   level: string
+  mastery: number
 }
 export type UniverseEdge = {
   fromNodeId: string
@@ -472,7 +473,7 @@ export function UniverseGraph({ galaxies, links }: { galaxies: Galaxy[]; links: 
         const isHov = hovered?.node.id === b.node.id
         const vr = visualRFor(b.node.level, b.r)
 
-        drawBody(ctx, b.node.level, b.x, b.y, vr, cam.scale)
+        drawBody(ctx, b.node.level, b.x, b.y, vr, cam.scale, b.node.mastery)
 
         if (linkedIds.has(b.node.id)) {
           traceStar8(ctx, b.x, b.y, vr + 6)

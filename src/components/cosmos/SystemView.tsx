@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { INK, INK_SOFT, INK_LINE, VERMILION, paintPaper, visualRFor, drawBody, levelWord } from './engraving'
 import { LevelMark } from '@/components/LevelMark'
 
-type SysNode = { id: string; title: string; summary: string; level: string }
+type SysNode = { id: string; title: string; summary: string; level: string; mastery: number }
 type SysChild = SysNode & { children: SysNode[] }
 
 type Props = {
@@ -158,7 +158,7 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
         ctx.lineTo(cx + (cvr + 16) * Math.cos(a), cy + (cvr + 16) * Math.sin(a))
         ctx.stroke()
       }
-      drawBody(ctx, node.level, cx, cy, cvr, 1)
+      drawBody(ctx, node.level, cx, cy, cvr, 1, node.mastery)
       ctx.fillStyle = INK
       ctx.font = `600 17px ${fontFam}`
       ctx.textAlign = 'center'
@@ -174,7 +174,7 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
         const isSel = selectedRef.current === o.child.id
         const isHov = hovered === o
         const vr = visualRFor(o.child.level, o.r)
-        drawBody(ctx, o.child.level, o.x, o.y, vr, 1)
+        drawBody(ctx, o.child.level, o.x, o.y, vr, 1, o.child.mastery)
         if (isSel || isHov) {
           ctx.strokeStyle = isSel ? VERMILION : INK_LINE
           ctx.lineWidth = isSel ? 1.4 : 1
@@ -244,6 +244,39 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
         </div>
         <p className="text-xs italic text-ink-faded mb-3">{levelWord(node.level)}, from {doc.title}</p>
         <p className="text-sm text-ink-soft leading-relaxed">{node.summary}</p>
+
+        {/* mastery seals: sketch -> inked -> gilt */}
+        <div className="mt-4 pt-3 border-t-[0.75px] border-ink-line">
+          <p className="text-xs italic text-ink-faded mb-1.5">Mastery</p>
+          <div className="flex gap-1.5">
+            {(['Unlearned', 'Learning', 'Mastered'] as const).map((label, m) => (
+              <button
+                key={label}
+                onClick={async () => {
+                  const res = await fetch(`/api/nodes/${node.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mastery: m }),
+                  })
+                  if (!res.ok) {
+                    window.alert('Failed to save mastery, please try again.')
+                    return
+                  }
+                  router.refresh()
+                }}
+                className={`flex-1 text-xs py-1.5 border transition-colors ${
+                  node.mastery === m
+                    ? m === 2
+                      ? 'border-gilt bg-gilt/15 text-ink font-medium'
+                      : 'border-ink bg-paper text-ink font-medium'
+                    : 'border-ink-line/60 text-ink-faded hover:border-ink hover:text-ink'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* children list */}
         {children.length > 0 && (

@@ -35,37 +35,113 @@ export function visualRFor(level: string, hitR: number) {
   return hitR * 0.4
 }
 
+// Mastery renders as illumination, never as a tier change: 0 = a pencil
+// sketch (outline only), 1 = inked, 2 = mastered — the body earns its gilt.
 export function drawBody(
   ctx: CanvasRenderingContext2D,
   level: string,
   x: number,
   y: number,
   vr: number,
-  scale: number
+  scale: number,
+  mastery: number = 1
 ) {
   if (level === 'star') {
+    if (mastery <= 0) {
+      traceStar8(ctx, x, y, vr)
+      ctx.strokeStyle = INK_LINE
+      ctx.lineWidth = 1.2 / scale
+      ctx.stroke()
+      return
+    }
     traceStar8(ctx, x, y, vr)
     ctx.fillStyle = INK
     ctx.fill()
     traceStar8(ctx, x, y, vr * 0.55)
-    ctx.fillStyle = GILT
-    ctx.fill()
+    ctx.fillStyle = mastery >= 2 ? GILT : INK
+    if (mastery >= 2) ctx.fill()
   } else if (level === 'planet') {
+    if (mastery <= 0) {
+      ctx.strokeStyle = INK_LINE
+      ctx.setLineDash([3 / scale, 3 / scale])
+      ctx.lineWidth = 1.2 / scale
+      ctx.beginPath()
+      ctx.arc(x, y, vr, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.setLineDash([])
+      return
+    }
     ctx.strokeStyle = INK
     ctx.lineWidth = 1.4 / scale
     ctx.beginPath()
     ctx.arc(x, y, vr, 0, Math.PI * 2)
     ctx.stroke()
-    ctx.fillStyle = INK
+    ctx.fillStyle = mastery >= 2 ? GILT : INK
     ctx.beginPath()
     ctx.arc(x, y, Math.max(vr * 0.3, 2.2), 0, Math.PI * 2)
     ctx.fill()
   } else {
-    ctx.fillStyle = INK_SOFT
+    if (mastery <= 0) {
+      ctx.strokeStyle = INK_LINE
+      ctx.lineWidth = 1 / scale
+      ctx.beginPath()
+      ctx.arc(x, y, vr, 0, Math.PI * 2)
+      ctx.stroke()
+      return
+    }
+    ctx.fillStyle = mastery >= 2 ? GILT : INK_SOFT
     ctx.beginPath()
     ctx.arc(x, y, vr, 0, Math.PI * 2)
     ctx.fill()
   }
+}
+
+// The crown: a thin double gilt ring for a body whose whole contains-subtree
+// (itself included) is mastered — completion cascades upward.
+export function drawCrown(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, scale: number) {
+  ctx.strokeStyle = GILT
+  ctx.lineWidth = 1 / scale
+  ctx.beginPath()
+  ctx.arc(x, y, r + 9, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.lineWidth = 0.5 / scale
+  ctx.beginPath()
+  ctx.arc(x, y, r + 12, 0, Math.PI * 2)
+  ctx.stroke()
+}
+
+// crownedIds: every node whose own mastery is 2 AND whose entire
+// contains-subtree is mastered. Cycle-safe.
+export function computeCrowned(
+  nodes: { id: string; mastery: number }[],
+  edges: { fromNodeId: string; toNodeId: string; relationType: string }[]
+): Set<string> {
+  const masteryById = new Map(nodes.map((n) => [n.id, n.mastery]))
+  const children = new Map<string, string[]>()
+  for (const e of edges) {
+    if (e.relationType !== 'contains') continue
+    const list = children.get(e.fromNodeId) ?? []
+    list.push(e.toNodeId)
+    children.set(e.fromNodeId, list)
+  }
+  const memo = new Map<string, boolean>()
+  function crowned(id: string, path: Set<string>): boolean {
+    if (memo.has(id)) return memo.get(id)!
+    if (path.has(id)) return false
+    path.add(id)
+    const ok =
+      (masteryById.get(id) ?? 0) >= 2 &&
+      (children.get(id) ?? []).every((c) => crowned(c, path))
+    path.delete(id)
+    memo.set(id, ok)
+    return ok
+  }
+  const out = new Set<string>()
+  for (const n of nodes) {
+    // Crowns mark completed systems — leaves just glow gilt on their own.
+    if ((children.get(n.id) ?? []).length > 0 && crowned(n.id, new Set())) out.add(n.id)
+  }
+  return out
 }
 
 export function levelWord(level: string) {

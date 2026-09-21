@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { collectContainsDescendants } from '@/lib/extraction'
-import { INK, INK_SOFT, INK_LINE, VERMILION, GILT, paintPaper, traceStar8, visualRFor, drawBody, levelWord } from './engraving'
+import { INK, INK_SOFT, INK_LINE, VERMILION, GILT, paintPaper, traceStar8, visualRFor, drawBody, drawCrown, computeCrowned, levelWord } from './engraving'
 
 export type GraphNode = {
   id: string
@@ -12,12 +12,14 @@ export type GraphNode = {
   summary: string
   level: string
   sourceHeading: string | null
+  mastery: number
 }
 export type GraphEdge = {
   fromNodeId: string
   toNodeId: string
   relationType: string
   weight: number
+  origin: string
 }
 export type CrossLink = {
   nodeId: string
@@ -70,6 +72,10 @@ export function CosmicGraph({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [selected, setSelected] = useState<GraphNode | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draftTitle, setDraftTitle] = useState('')
+  const [draftSummary, setDraftSummary] = useState('')
+  const [saving, setSaving] = useState(false)
   const selectedRef = useRef<GraphNode | null>(null)
   // Camera lives in a ref so the view survives data refreshes (e.g. after a delete).
   const cameraRef = useRef({ scale: 1, ox: 0, oy: 0 })
@@ -80,6 +86,7 @@ export function CosmicGraph({
 
   useEffect(() => {
     selectedRef.current = selected
+    setEditing(false)
   }, [selected])
 
   useEffect(() => {
@@ -205,6 +212,7 @@ export function CosmicGraph({
     })
 
     const linkedIds = new Set(crossLinks.map((c) => c.nodeId))
+    const crownedIds = computeCrowned(nodes, edges)
 
     // Faint ink specks, like foxing on old paper.
     const specks = Array.from({ length: 70 }, () => ({
@@ -268,10 +276,19 @@ export function CosmicGraph({
         }
       }
       if (!nearest) return
+      const parentChanged = b.parent?.node.id !== nearest.node.id
       b.parent = nearest
       b.orbitRadius = Math.max(nd, nearest.r + b.r + 12)
       b.angle = Math.atan2(b.y - nearest.y, b.x - nearest.x)
       b.pinned = false
+      // Persist the new orbit — the rearranged universe survives reloads.
+      if (parentChanged) {
+        fetch(`/api/nodes/${b.node.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ parentId: nearest.node.id }),
+        }).catch((err) => console.error('[graph] failed to persist reattach:', err))
+      }
     }
 
     function onDown(e: MouseEvent) {
@@ -417,6 +434,11 @@ export function CosmicGraph({
           ctx.strokeStyle = 'rgba(138, 116, 78, 0.35)'
           ctx.setLineDash([1.5 / cam.scale, 4 / cam.scale])
           ctx.lineWidth = 0.8 / cam.scale
+        } else if (e.origin === 'manual') {
+          // A relation the user drew themselves: solid vermilion.
+          ctx.strokeStyle = 'rgba(179, 58, 34, 0.6)'
+          ctx.setLineDash([])
+          ctx.lineWidth = 1.2 / cam.scale
         } else {
           ctx.strokeStyle = 'rgba(179, 58, 34, 0.4)'
           ctx.setLineDash([4 / cam.scale, 5 / cam.scale])
@@ -434,7 +456,8 @@ export function CosmicGraph({
         const isHov = hovered?.node.id === b.node.id
         const vr = visualR(b)
 
-        drawBody(ctx, b.node.level, b.x, b.y, vr, cam.scale)
+        drawBody(ctx, b.node.level, b.x, b.y, vr, cam.scale, b.node.mastery)
+        if (crownedIds.has(b.node.id)) drawCrown(ctx, b.x, b.y, vr, cam.scale)
 
         // gilt star: this concept also appears in another document
         if (linkedIds.has(b.node.id)) {
@@ -480,6 +503,42 @@ export function CosmicGraph({
     }
   }, [nodes, edges, crossLinks])
 
+  async function setMastery(m: number) {
+    if (!selected) return
+    const res = await fetch(`/api/nodes/${selected.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mastery: m }),
+    })
+    if (!res.ok) {
+      window.alert('Failed to save mastery, please try again.')
+      return
+    }
+    setSelected({ ...selected, mastery: m })
+    router.refresh()
+  }
+
+  async function saveEdit() {
+    if (!selected || saving) return
+    const title = draftTitle.trim()
+    const summary = draftSummary.trim()
+    if (!title || !summary) return
+    setSaving(true)
+    const res = await fetch(`/api/nodes/${selected.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, summary }),
+    })
+    setSaving(false)
+    if (!res.ok) {
+      window.alert('Failed to save changes, please try again.')
+      return
+    }
+    setSelected({ ...selected, title, summary })
+    setEditing(false)
+    router.refresh()
+  }
+
   async function deleteSelected() {
     if (!selected) return
     const subtree = collectContainsDescendants(selected.id, edges)
@@ -508,14 +567,71 @@ export function CosmicGraph({
       </div>
       {selected && (
         <div className="absolute top-4 right-4 w-72 bg-paper-card border border-ink shadow-plate p-4">
-          <div className="flex items-baseline justify-between mb-1.5">
-            <span className="font-semibold">{selected.title}</span>
-            <span className="text-xs italic text-ink-faded">{levelWord(selected.level)}</span>
-          </div>
-          <p className="text-sm text-ink-soft leading-relaxed">{selected.summary}</p>
-          {selected.sourceHeading && (
-            <p className="text-xs italic text-ink-faded mt-3">From the heading “{selected.sourceHeading}”</p>
+          {editing ? (
+            <div className="flex flex-col gap-2.5 mb-1">
+              <input
+                value={draftTitle}
+                onChange={(e) => setDraftTitle(e.target.value)}
+                className="w-full bg-paper border border-ink-line px-2.5 py-1.5 text-sm font-semibold text-ink focus:outline-none focus:border-vermilion"
+              />
+              <textarea
+                value={draftSummary}
+                onChange={(e) => setDraftSummary(e.target.value)}
+                rows={4}
+                className="w-full bg-paper border border-ink-line px-2.5 py-1.5 text-sm text-ink leading-relaxed resize-none focus:outline-none focus:border-vermilion"
+              />
+              <div className="flex items-baseline gap-4">
+                <button
+                  onClick={saveEdit}
+                  disabled={saving || !draftTitle.trim() || !draftSummary.trim()}
+                  className="text-xs bg-ink text-paper-card tracking-[0.06em] px-3.5 py-1.5 shadow-plate-sm hover:bg-ink-soft disabled:opacity-50 transition-colors"
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+                <button
+                  onClick={() => setEditing(false)}
+                  className="text-xs italic text-ink-faded hover:text-ink transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-baseline justify-between mb-1.5">
+                <span className="font-semibold">{selected.title}</span>
+                <span className="text-xs italic text-ink-faded">{levelWord(selected.level)}</span>
+              </div>
+              <p className="text-sm text-ink-soft leading-relaxed">{selected.summary}</p>
+              {selected.sourceHeading && (
+                <p className="text-xs italic text-ink-faded mt-3">From the heading “{selected.sourceHeading}”</p>
+              )}
+            </>
           )}
+
+          {/* mastery seals: sketch -> inked -> gilt */}
+          <div className="mt-3 pt-3 border-t border-ink-line/60">
+            <div className="flex items-baseline justify-between mb-1.5">
+              <span className="text-xs italic text-ink-faded">Mastery</span>
+            </div>
+            <div className="flex gap-1.5">
+              {(['Unlearned', 'Learning', 'Mastered'] as const).map((label, m) => (
+                <button
+                  key={label}
+                  onClick={() => setMastery(m)}
+                  className={`flex-1 text-xs py-1.5 border transition-colors ${
+                    selected.mastery === m
+                      ? m === 2
+                        ? 'border-gilt bg-gilt/15 text-ink font-medium'
+                        : 'border-ink bg-paper text-ink font-medium'
+                      : 'border-ink-line/60 text-ink-faded hover:border-ink hover:text-ink'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           {(() => {
             const appearsIn = [
               ...new Map(
@@ -547,6 +663,18 @@ export function CosmicGraph({
             >
               Close
             </button>
+            {!editing && (
+              <button
+                onClick={() => {
+                  setDraftTitle(selected.title)
+                  setDraftSummary(selected.summary)
+                  setEditing(true)
+                }}
+                className="text-xs italic text-ink-faded hover:text-ink transition-colors"
+              >
+                Amend
+              </button>
+            )}
             <button
               onClick={deleteSelected}
               disabled={deleting}

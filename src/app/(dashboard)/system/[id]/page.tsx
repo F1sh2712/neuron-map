@@ -24,14 +24,14 @@ export default async function SystemPage({ params }: { params: Promise<{ id: str
     }),
     db.knowledgeEdge.findMany({
       where: { fromNodeId: id, relationType: 'contains' },
-      include: { toNode: { select: { id: true, title: true, summary: true, level: true } } },
+      include: { toNode: { select: { id: true, title: true, summary: true, level: true, mastery: true } } },
     }),
   ])
   const childIds = childEdges.map((e) => e.toNode.id)
   const grandEdges = childIds.length
     ? await db.knowledgeEdge.findMany({
         where: { fromNodeId: { in: childIds }, relationType: 'contains' },
-        include: { toNode: { select: { id: true, title: true, summary: true, level: true } } },
+        include: { toNode: { select: { id: true, title: true, summary: true, level: true, mastery: true } } },
       })
     : []
 
@@ -43,7 +43,7 @@ export default async function SystemPage({ params }: { params: Promise<{ id: str
   return (
     <SystemView
       document={{ id: node.document.id, title: node.document.title }}
-      node={{ id: node.id, title: node.title, summary: node.summary, level: node.level }}
+      node={{ id: node.id, title: node.title, summary: node.summary, level: node.level, mastery: node.mastery }}
       parent={parentEdge ? parentEdge.fromNode : null}
       children={children}
     />
