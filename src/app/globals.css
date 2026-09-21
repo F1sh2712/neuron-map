@@ -8,9 +8,9 @@
   --color-paper-panel: #e3d3a9;
   --color-paper-card: #efe4c6;
   --color-ink: #43301a;
-  --color-ink-soft: #5c4a2d;
-  --color-ink-faded: #7a6647;
-  --color-ink-line: #8a744e;
+  --color-ink-soft: #574526;
+  --color-ink-faded: #66522e;
+  --color-ink-line: #8a744e; /* borders and rules only — too light for text */
   --color-vermilion: #b33a22;
   --color-gilt: #a97f26;
   --color-gilt-bright: #c79a3b;

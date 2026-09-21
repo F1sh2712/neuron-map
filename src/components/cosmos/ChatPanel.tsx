@@ -157,7 +157,7 @@ export function ChatPanel({
             value={activeId ?? ''}
             onChange={(e) => (e.target.value ? switchSession(e.target.value) : newChat())}
             disabled={busy}
-            className="flex-1 min-w-0 bg-paper-card border border-ink-line px-2 py-1.5 text-xs text-ink italic focus:outline-none focus:border-ink disabled:opacity-60"
+            className="flex-1 min-w-0 bg-paper-card border border-ink-line px-2 py-1.5 text-sm text-ink focus:outline-none focus:border-ink disabled:opacity-60"
           >
             <option value="">A new conversation</option>
             {sessions.map((s) => (
@@ -192,7 +192,7 @@ export function ChatPanel({
             <button
               onClick={deleteChat}
               disabled={busy}
-              className="text-[11px] italic text-ink-line hover:text-vermilion disabled:opacity-50 transition-colors"
+              className="text-xs italic text-ink-faded hover:text-vermilion disabled:opacity-50 transition-colors"
             >
               Delete conversation
             </button>

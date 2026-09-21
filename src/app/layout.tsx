@@ -21,7 +21,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${garamond.variable} h-full antialiased`}>
+    // No `antialiased`: grayscale smoothing thins serif text on Windows —
+    // subpixel rendering keeps Garamond crisp.
+    <html lang="en" className={`${garamond.variable} h-full`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

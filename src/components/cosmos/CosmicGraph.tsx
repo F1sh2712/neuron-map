@@ -550,7 +550,7 @@ export function CosmicGraph({
             <button
               onClick={deleteSelected}
               disabled={deleting}
-              className="text-xs italic text-ink-line hover:text-vermilion disabled:opacity-50 transition-colors"
+              className="text-xs italic text-ink-faded hover:text-vermilion disabled:opacity-50 transition-colors"
             >
               {deleting ? 'Striking out…' : 'Strike out'}
             </button>

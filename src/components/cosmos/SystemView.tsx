@@ -335,7 +335,7 @@ export function SystemView({ document: doc, node, parent, children }: Props) {
               router.push(parent ? `/system/${parent.id}` : `/graph/${doc.id}`)
               router.refresh()
             }}
-            className="text-xs italic text-ink-line hover:text-vermilion transition-colors"
+            className="text-sm italic text-ink-faded hover:text-vermilion transition-colors"
           >
             Strike out this {node.level === 'star' ? 'star' : node.level === 'planet' ? 'planet' : 'moon'} and everything it contains
           </button>

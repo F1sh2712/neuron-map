@@ -63,11 +63,11 @@ export default async function GraphPage({ params }: { params: Promise<{ id: stri
       <header className="flex items-baseline justify-between px-7 py-3 border-b-[0.75px] border-ink-line">
         <div className="flex items-baseline gap-4">
           <h1 className="text-lg font-semibold leading-none">{document.title}</h1>
-          <p className="text-xs italic text-ink-faded">
+          <p className="text-sm italic text-ink-faded">
             {nodes.length} bodies, {edges.length} links
           </p>
         </div>
-        <p className="text-xs italic text-ink-faded">stars burn gold — planets ringed — moons small</p>
+        <p className="text-sm italic text-ink-faded">stars burn gold — planets ringed — moons small</p>
       </header>
       <GraphWorkspace
         documentId={id}

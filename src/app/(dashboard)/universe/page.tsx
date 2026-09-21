@@ -43,11 +43,11 @@ export default async function UniversePage() {
       <header className="flex items-baseline justify-between px-7 py-3 border-b-[0.75px] border-ink-line">
         <div className="flex items-baseline gap-4">
           <h1 className="text-lg font-semibold leading-none">Your Universe</h1>
-          <p className="text-xs italic text-ink-faded">
+          <p className="text-sm italic text-ink-faded">
             {galaxies.length} charts, {totalNodes} bodies, {links.length} gilt threads
           </p>
         </div>
-        <p className="text-xs italic text-ink-faded">every document a chart — gilt threads join shared ideas</p>
+        <p className="text-sm italic text-ink-faded">every document a chart — gilt threads join shared ideas</p>
       </header>
       <div className="flex-1 min-h-0">
         {galaxies.length === 0 ? (

@@ -18,20 +18,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Link href="/dashboard" className="font-semibold tracking-[0.2em] hover:text-vermilion transition-colors">
             NEURONMAP
           </Link>
-          <div className="flex items-baseline gap-6 text-[15px]">
-            <Link href="/dashboard" className="italic text-ink-faded hover:text-ink transition-colors">
+          <div className="flex items-baseline gap-6 text-base">
+            <Link href="/dashboard" className="font-medium text-ink-soft hover:text-vermilion transition-colors">
               Documents
             </Link>
-            <Link href="/universe" className="italic text-ink-faded hover:text-ink transition-colors">
+            <Link href="/universe" className="font-medium text-ink-soft hover:text-vermilion transition-colors">
               Universe
             </Link>
-            <Link href="/upload" className="italic text-ink-faded hover:text-ink transition-colors">
+            <Link href="/upload" className="font-medium text-ink-soft hover:text-vermilion transition-colors">
               Upload
             </Link>
           </div>
         </div>
-        <div className="flex items-baseline gap-6 text-[15px]">
-          <Link href="/settings" className="italic text-ink-faded hover:text-ink transition-colors">
+        <div className="flex items-baseline gap-6 text-base">
+          <Link href="/settings" className="font-medium text-ink-soft hover:text-vermilion transition-colors">
             Settings
           </Link>
           <SignOutButton />

@@ -75,7 +75,7 @@ export default async function DashboardPage() {
                     <span className="font-semibold truncate">{doc.title}</span>
                     <span className={`text-xs italic border px-2 py-0.5 ${st.cls}`}>{st.label}</span>
                   </div>
-                  <p className="text-xs italic text-ink-faded mt-1.5">
+                  <p className="text-sm italic text-ink-faded mt-1.5">
                     {doc._count.nodes} bodies, surveyed {new Date(doc.createdAt).toLocaleDateString('en-AU')}
                   </p>
                 </div>
