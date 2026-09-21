@@ -1,172 +1,174 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
+function EngravedChart() {
+  return (
+    <svg viewBox="0 0 780 560" className="w-full h-auto" role="img" aria-label="An engraved star chart of one document's concepts">
+      {/* degree ring */}
+      <g stroke="#43301a" fill="none">
+        <circle cx="390" cy="280" r="256" strokeWidth="1.4"></circle>
+        <circle cx="390" cy="280" r="248" strokeWidth="0.6"></circle>
+      </g>
+      <g stroke="#43301a" strokeWidth="1">
+        <line x1="390" y1="24" x2="390" y2="36"></line>
+        <line x1="390" y1="524" x2="390" y2="536"></line>
+        <line x1="134" y1="280" x2="146" y2="280"></line>
+        <line x1="634" y1="280" x2="646" y2="280"></line>
+        <line x1="209" y1="99" x2="217" y2="108"></line>
+        <line x1="571" y1="99" x2="563" y2="108"></line>
+        <line x1="209" y1="461" x2="217" y2="452"></line>
+        <line x1="571" y1="461" x2="563" y2="452"></line>
+      </g>
+      {/* orbits as fine double lines */}
+      <g stroke="#6b5637" fill="none">
+        <circle cx="390" cy="280" r="92" strokeWidth="0.8"></circle>
+        <circle cx="390" cy="280" r="95" strokeWidth="0.4"></circle>
+        <circle cx="390" cy="280" r="164" strokeWidth="0.8"></circle>
+        <circle cx="390" cy="280" r="167" strokeWidth="0.4"></circle>
+      </g>
+      {/* the thread of shared ideas, in vermilion */}
+      <path d="M 160 390 C 260 310, 520 250, 620 170" stroke="#b33a22" strokeWidth="1.2" fill="none" strokeDasharray="7 5"></path>
+      <text x="596" y="158" fill="#b33a22" fontSize="13" fontStyle="italic">the thread of shared ideas</text>
+      {/* central 8-point engraved star */}
+      <g>
+        <path d="M 390 228 L 398 268 L 438 280 L 398 292 L 390 332 L 382 292 L 342 280 L 382 268 Z" fill="#43301a"></path>
+        <path d="M 390 250 L 395 275 L 420 280 L 395 285 L 390 310 L 385 285 L 360 280 L 385 275 Z" fill="#a97f26"></path>
+      </g>
+      <g stroke="#8a744e" strokeWidth="0.6">
+        <line x1="390" y1="210" x2="390" y2="222"></line>
+        <line x1="390" y1="338" x2="390" y2="350"></line>
+        <line x1="320" y1="280" x2="332" y2="280"></line>
+        <line x1="448" y1="280" x2="460" y2="280"></line>
+      </g>
+      {/* planets: engraved ringed circles */}
+      <g>
+        <circle cx="311" cy="221" r="7" fill="none" stroke="#43301a" strokeWidth="1.3"></circle>
+        <circle cx="311" cy="221" r="2.4" fill="#43301a"></circle>
+        <circle cx="524" cy="353" r="7" fill="none" stroke="#43301a" strokeWidth="1.3"></circle>
+        <circle cx="524" cy="353" r="2.4" fill="#43301a"></circle>
+        <circle cx="258" cy="376" r="7" fill="none" stroke="#43301a" strokeWidth="1.3"></circle>
+        <circle cx="258" cy="376" r="2.4" fill="#43301a"></circle>
+      </g>
+      {/* gilt star: a concept shared with another document */}
+      <path d="M 524 330 L 527 346 L 543 353 L 527 360 L 524 376 L 521 360 L 505 353 L 521 346 Z" fill="none" stroke="#a97f26" strokeWidth="1.2"></path>
+      {/* moons */}
+      <circle cx="290" cy="206" r="2.2" fill="#6b5637"></circle>
+      <circle cx="332" cy="236" r="2.2" fill="#6b5637"></circle>
+      {/* labels */}
+      <g fill="#43301a">
+        <text x="390" y="362" fontSize="17" fontWeight="600" textAnchor="middle" letterSpacing="0.12em">GRAPH ALGORITHMS</text>
+        <text x="311" y="198" fontSize="15" fontStyle="italic" textAnchor="middle">Graph Traversal</text>
+        <text x="524" y="398" fontSize="15" fontStyle="italic" textAnchor="middle">Shortest Paths</text>
+        <text x="258" y="402" fontSize="15" fontStyle="italic" textAnchor="middle">Representations</text>
+      </g>
+      {/* compass rosette */}
+      <g transform="translate(706, 480)" stroke="#43301a" fill="none">
+        <circle r="20" strokeWidth="1"></circle>
+        <path d="M 0 -20 L 4 0 L 0 20 L -4 0 Z" fill="#43301a" stroke="none"></path>
+        <path d="M -20 0 L 0 4 L 20 0 L 0 -4 Z" fill="#8a744e" stroke="none"></path>
+      </g>
+    </svg>
+  )
+}
+
 export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white overflow-hidden">
-      <style>{`
-        @keyframes orbit-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes orbit-fast { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
-        @keyframes twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.9; } }
-        .orbit-ring-1 { animation: orbit-slow 28s linear infinite; }
-        .orbit-ring-2 { animation: orbit-slow 44s linear infinite; }
-        .orbit-moon { animation: orbit-fast 9s linear infinite; }
-        .star-tw { animation: twinkle 3.2s ease-in-out infinite; }
-      `}</style>
+    <div className="min-h-screen text-ink relative">
+      {/* plate border */}
+      <div aria-hidden className="pointer-events-none fixed inset-4 border-[1.5px] border-ink hidden md:block"></div>
+      <div aria-hidden className="pointer-events-none fixed inset-[22px] border-[0.5px] border-ink-line hidden md:block"></div>
 
-      {/* starfield */}
-      <div aria-hidden className="pointer-events-none fixed inset-0">
-        {[
-          [7, 12, 1.5, 0], [18, 68, 1, 1.1], [26, 30, 2, 0.4], [37, 82, 1, 2.1],
-          [44, 15, 1.5, 1.6], [55, 55, 1, 0.2], [63, 24, 2, 2.6], [71, 74, 1, 0.9],
-          [79, 38, 1.5, 1.9], [86, 61, 1, 0.6], [92, 20, 2, 1.4], [12, 45, 1, 2.4],
-          [31, 58, 1, 3], [49, 88, 1.5, 0.8], [68, 8, 1, 2.2], [95, 84, 1.5, 2.8],
-        ].map(([x, y, size, delay], i) => (
-          <span
-            key={i}
-            className="star-tw absolute rounded-full bg-white"
-            style={{
-              left: `${x}%`,
-              top: `${y}%`,
-              width: `${size}px`,
-              height: `${size}px`,
-              animationDelay: `${delay}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* nav */}
-      <header className="relative z-10 flex items-center justify-between px-6 md:px-12 py-5 max-w-6xl mx-auto">
-        <div className="flex items-center gap-2.5">
-          <img src="/icon.svg" alt="NeuronMap" className="w-8 h-8 rounded-lg" />
-          <span className="font-bold">NeuronMap</span>
-        </div>
-        <div className="flex items-center gap-3">
-          {user ? (
-            <Link
-              href="/dashboard"
-              className="bg-violet-600 hover:bg-violet-500 text-sm font-medium rounded-lg px-4 py-2 transition-colors"
-            >
-              Open your universe
-            </Link>
-          ) : (
-            <>
-              <Link href="/login" className="text-sm text-zinc-400 hover:text-white px-3 py-2 transition-colors">
-                Sign in
-              </Link>
+      <div className="relative max-w-6xl mx-auto px-8 md:px-14 py-10">
+        {/* nav */}
+        <nav className="flex items-baseline justify-between gap-6 flex-wrap">
+          <div className="font-semibold text-lg tracking-[0.22em]">NEURONMAP</div>
+          <div className="flex items-baseline gap-7">
+            <a href="#how-it-works" className="italic text-ink-faded hover:text-ink transition-colors">How it works</a>
+            {user ? (
               <Link
-                href="/register"
-                className="bg-violet-600 hover:bg-violet-500 text-sm font-medium rounded-lg px-4 py-2 transition-colors"
+                href="/dashboard"
+                className="tracking-[0.1em] border-[1.5px] border-ink px-5 py-2 shadow-plate-sm hover:bg-paper-card transition-colors"
               >
-                Get started
+                OPEN YOUR ATLAS
               </Link>
-            </>
-          )}
-        </div>
-      </header>
+            ) : (
+              <>
+                <Link href="/login" className="italic text-ink-faded hover:text-ink transition-colors">Sign in</Link>
+                <Link
+                  href="/register"
+                  className="tracking-[0.1em] border-[1.5px] border-ink px-5 py-2 shadow-plate-sm hover:bg-paper-card transition-colors"
+                >
+                  BEGIN YOUR ATLAS
+                </Link>
+              </>
+            )}
+          </div>
+        </nav>
 
-      {/* hero */}
-      <main className="relative z-10 max-w-6xl mx-auto px-6 md:px-12">
-        <div className="grid md:grid-cols-2 gap-12 items-center pt-10 md:pt-20 pb-16">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              Turn your notes into a{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-amber-300">
-                universe
-              </span>
-            </h1>
-            <p className="mt-5 text-lg text-zinc-400 leading-relaxed">
-              Upload your Markdown study notes. AI maps every concept and how they
-              connect — then renders them as a living cosmic graph you can explore.
+        {/* hero */}
+        <div className="flex items-center gap-14 mt-14 md:mt-10 flex-col lg:flex-row">
+          <div className="lg:w-[460px] flex-none">
+            <p className="italic text-ink-faded">Atlas of one&apos;s own knowledge, drawn anew</p>
+            <h1 className="text-5xl md:text-6xl leading-[1.05] font-semibold mt-3">Your notes are a universe.</h1>
+            <p className="text-lg leading-relaxed text-ink-soft mt-5 max-w-md">
+              Upload your study notes and NeuronMap charts every concept they
+              contain — core topics as stars, subtopics in orbit around them —
+              then lets you explore the map and ask it questions.
             </p>
-            <div className="mt-8 flex items-center gap-4">
+            <div className="flex items-center gap-6 mt-8 flex-wrap">
               <Link
-                href={user ? '/dashboard' : '/register'}
-                className="bg-violet-600 hover:bg-violet-500 font-medium rounded-xl px-6 py-3 transition-colors"
+                href={user ? '/upload' : '/register'}
+                className="tracking-[0.08em] text-paper-card bg-ink px-7 py-3 shadow-plate hover:bg-ink-soft transition-colors"
               >
-                {user ? 'Open your universe' : 'Start mapping — free'}
+                {user ? 'Chart new notes' : 'Begin your atlas'}
               </Link>
-              <a
-                href="https://github.com/F1sh2712/neuron-map"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-400 hover:text-white text-sm transition-colors"
-              >
-                View source on GitHub →
-              </a>
+              <Link href={user ? '/universe' : '/login'} className="italic border-b border-ink-line pb-px hover:text-vermilion transition-colors">
+                {user ? 'or open your universe' : 'or view a finished chart'}
+              </Link>
             </div>
+            <p className="italic text-sm text-ink-line mt-9">Markdown in, universe out — free while in beta</p>
           </div>
 
-          {/* orbital visual */}
-          <div aria-hidden className="relative h-72 md:h-96 flex items-center justify-center">
-            {/* star */}
-            <div className="absolute w-16 h-16 rounded-full bg-gradient-to-br from-amber-200 to-amber-500 shadow-[0_0_60px_12px_rgba(245,158,11,0.35)]" />
-            {/* planet orbit */}
-            <div className="orbit-ring-1 absolute w-56 h-56 rounded-full border border-white/10">
-              <div className="absolute -top-2.5 left-1/2 -ml-2.5 w-5 h-5 rounded-full bg-gradient-to-br from-violet-300 to-violet-600 shadow-[0_0_24px_4px_rgba(139,92,246,0.4)]">
-                {/* asteroid around the planet */}
-                <div className="orbit-moon absolute inset-0">
-                  <div className="absolute -top-3 left-1/2 -ml-1 w-2 h-2 rounded-full bg-zinc-300" />
-                </div>
-              </div>
-            </div>
-            {/* second planet orbit */}
-            <div className="orbit-ring-2 absolute w-80 h-80 rounded-full border border-white/10">
-              <div className="absolute top-1/2 -right-2 -mt-2 w-4 h-4 rounded-full bg-gradient-to-br from-cyan-200 to-cyan-500 shadow-[0_0_20px_3px_rgba(34,211,238,0.35)]" />
-            </div>
+          <div className="flex-1 w-full max-w-2xl relative">
+            <EngravedChart />
+            <p className="italic text-[13px] text-ink-faded text-center mt-1">
+              Fig. I — The system of Graph Algorithms, eleven bodies, as surveyed from one student&apos;s notes
+            </p>
           </div>
         </div>
 
-        {/* how it works */}
-        <section className="pb-24">
-          <h2 className="text-center text-sm uppercase tracking-widest text-zinc-500 mb-10">
-            How it works
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                step: '01',
-                title: 'Upload your notes',
-                body: 'Drop in a Markdown file — lecture notes, textbook chapters, anything with headings.',
-              },
-              {
-                step: '02',
-                title: 'AI maps the knowledge',
-                body: 'AI extracts every concept, tiers them into stars, planets and asteroids, and finds the relationships between them.',
-              },
-              {
-                step: '03',
-                title: 'Explore your universe',
-                body: 'Watch planets orbit their stars, drag them around, and click any body to read what it means.',
-              },
-            ].map((f) => (
-              <div key={f.step} className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-6">
-                <div className="text-violet-500 font-mono text-sm mb-3">{f.step}</div>
-                <h3 className="font-semibold mb-2">{f.title}</h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">{f.body}</p>
-              </div>
-            ))}
+        {/* three steps */}
+        <div id="how-it-works" className="grid grid-cols-1 md:grid-cols-3 border-t-[1.5px] border-ink mt-14">
+          <div className="py-6 md:pr-8">
+            <h2 className="text-xl font-semibold">I. Upload your notes</h2>
+            <p className="text-[15px] leading-relaxed text-ink-soft mt-1">Any Markdown file — lecture notes, summaries, readings.</p>
           </div>
-        </section>
-      </main>
+          <div className="py-6 md:px-8 md:border-l-[0.75px] border-ink-line">
+            <h2 className="text-xl font-semibold">II. AI draws the chart</h2>
+            <p className="text-[15px] leading-relaxed text-ink-soft mt-1">Every concept is placed — stars, planets, moons — with the links between them.</p>
+          </div>
+          <div className="py-6 md:pl-8 md:border-l-[0.75px] border-ink-line">
+            <h2 className="text-xl font-semibold">III. Explore and ask</h2>
+            <p className="text-[15px] leading-relaxed text-ink-soft mt-1">Wander the map and question it — answers cite the exact concepts.</p>
+          </div>
+        </div>
 
-      <footer className="relative z-10 border-t border-zinc-900">
-        <div className="max-w-6xl mx-auto px-6 md:px-12 py-6 flex items-center justify-between text-xs text-zinc-600">
-          <span>NeuronMap — an AI-supervised engineering project</span>
+        {/* footer */}
+        <footer className="flex items-baseline justify-between border-t-[0.75px] border-ink-line pt-5 pb-2 mt-2">
+          <p className="italic text-sm text-ink-faded">Drawn with care by a student, for students.</p>
           <a
             href="https://github.com/F1sh2712/neuron-map"
             target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-zinc-400 transition-colors"
+            rel="noreferrer"
+            className="italic text-sm text-ink-faded hover:text-ink transition-colors"
           >
-            GitHub
+            The making of this atlas, on GitHub
           </a>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   )
 }

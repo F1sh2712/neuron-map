@@ -8,6 +8,13 @@ import { PasswordStrengthBar } from '@/components/PasswordStrengthBar'
 
 type Step = 'password' | 'profile'
 
+const inputClass =
+  'w-full bg-paper border border-ink-line px-3 py-2 text-[15px] text-ink placeholder:text-ink-line placeholder:italic focus:outline-none focus:border-vermilion'
+const buttonClass =
+  'w-full bg-ink text-paper-card tracking-[0.08em] py-2.5 shadow-plate-sm hover:bg-ink-soft disabled:opacity-60 disabled:cursor-not-allowed transition-colors'
+const errorClass = 'text-sm text-vermilion border border-vermilion/60 bg-vermilion/5 px-3 py-2'
+const labelClass = 'block text-sm text-ink-soft mb-1.5'
+
 export default function SetupPage() {
   const [step, setStep] = useState<Step>('password')
   const [password, setPassword] = useState('')
@@ -47,31 +54,28 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-      <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl">
-        <div className="flex items-center gap-3 mb-6">
-          <img src="/icon.svg" alt="NeuronMap" className="w-10 h-10 rounded-xl" />
-          <div>
-            <h1 className="text-xl font-bold text-white leading-none">NeuronMap</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              {step === 'password' ? 'Set your password' : 'Complete your profile'}
-            </p>
-          </div>
+    <div className="min-h-screen flex items-center justify-center text-ink">
+      <div className="w-full max-w-sm bg-paper-card border border-ink shadow-plate p-8">
+        <div className="mb-6">
+          <div className="font-semibold tracking-[0.22em] text-lg">NEURONMAP</div>
+          <p className="italic text-sm text-ink-faded mt-0.5">
+            {step === 'password' ? 'Set your password' : 'Complete your profile'}
+          </p>
         </div>
 
         <div className="flex gap-1 mb-6">
           {(['password', 'profile'] as Step[]).map((s) => (
-            <div key={s} className={`flex-1 h-1 rounded-full transition-colors ${
-              step === 'profile' || s === step ? 'bg-violet-600' : 'bg-zinc-800'
+            <div key={s} className={`flex-1 h-1 transition-colors ${
+              step === 'profile' || s === step ? 'bg-gilt' : 'bg-ink-line/40'
             }`} />
           ))}
         </div>
 
         {step === 'password' && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-zinc-400">Email verified! Now set your login password</p>
+            <p className="text-sm text-ink-soft">Email verified! Now set your login password</p>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Password</label>
+              <label className={labelClass}>Password</label>
               <input
                 type="password"
                 value={password}
@@ -79,12 +83,12 @@ export default function SetupPage() {
                 placeholder="••••••••"
                 autoFocus
                 autoComplete="new-password"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                className={inputClass}
               />
               <PasswordStrengthBar password={password} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Confirm password</label>
+              <label className={labelClass}>Confirm password</label>
               <input
                 type="password"
                 value={confirm}
@@ -92,32 +96,28 @@ export default function SetupPage() {
                 placeholder="••••••••"
                 autoComplete="new-password"
                 onKeyDown={e => e.key === 'Enter' && setPasswordStep()}
-                className={`w-full bg-zinc-800 border rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent ${
-                  confirm.length > 0 && confirm !== password ? 'border-red-600' : 'border-zinc-700'
-                }`}
+                className={`${inputClass} ${confirm.length > 0 && confirm !== password ? 'border-vermilion' : ''}`}
               />
               {confirm.length > 0 && confirm !== password && (
-                <p className="text-xs text-red-400 mt-1">Passwords do not match</p>
+                <p className="text-xs italic text-vermilion mt-1">Passwords do not match</p>
               )}
             </div>
-            {error && (
-              <p className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2">{error}</p>
-            )}
+            {error && <p className={errorClass}>{error}</p>}
             <button
               onClick={setPasswordStep}
               disabled={!password || !confirm || loading}
-              className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
+              className={buttonClass}
             >
-              {loading ? 'Setting...' : 'Set password'}
+              {loading ? 'Setting…' : 'Set password'}
             </button>
           </div>
         )}
 
         {step === 'profile' && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-zinc-400">Complete your profile (optional)</p>
+            <p className="text-sm text-ink-soft">Complete your profile (optional)</p>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Username</label>
+              <label className={labelClass}>Username</label>
               <input
                 type="text"
                 value={username}
@@ -125,29 +125,27 @@ export default function SetupPage() {
                 placeholder="What should we call you?"
                 autoFocus
                 maxLength={32}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                className={inputClass}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Bio</label>
+              <label className={labelClass}>Bio</label>
               <textarea
                 value={bio}
                 onChange={e => setBio(e.target.value)}
-                placeholder="Tell us about yourself..."
+                placeholder="Tell us about yourself…"
                 rows={3}
                 maxLength={200}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none"
+                className={`${inputClass} resize-none`}
               />
             </div>
-            {error && (
-              <p className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2">{error}</p>
-            )}
+            {error && <p className={errorClass}>{error}</p>}
             <button
               onClick={submitProfile}
               disabled={loading}
-              className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
+              className={buttonClass}
             >
-              {loading ? 'Saving...' : 'Enter my universe'}
+              {loading ? 'Saving…' : 'Enter your universe'}
             </button>
           </div>
         )}

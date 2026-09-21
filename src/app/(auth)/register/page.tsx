@@ -9,6 +9,12 @@ type Step = 'email' | 'otp'
 
 const OTP_LENGTH = 8
 
+const inputClass =
+  'w-full bg-paper border border-ink-line px-3 py-2 text-[15px] text-ink placeholder:text-ink-line placeholder:italic focus:outline-none focus:border-vermilion'
+const buttonClass =
+  'w-full bg-ink text-paper-card tracking-[0.08em] py-2.5 shadow-plate-sm hover:bg-ink-soft disabled:opacity-60 disabled:cursor-not-allowed transition-colors'
+const errorClass = 'text-sm text-vermilion border border-vermilion/60 bg-vermilion/5 px-3 py-2'
+
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
@@ -69,27 +75,24 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-zinc-950">
+    <div className="relative min-h-screen flex items-center justify-center text-ink">
       <Link
         href="/"
-        className="absolute top-5 right-6 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg px-4 py-2 transition-colors"
+        className="absolute top-5 right-6 text-sm border-[1.5px] border-ink px-4 py-2 shadow-plate-sm hover:bg-paper-card transition-colors"
       >
         ← Back to home
       </Link>
-      <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl">
-        <Link href="/" className="flex items-center gap-3 mb-8 group">
-          <img src="/icon.svg" alt="NeuronMap" className="w-10 h-10 rounded-xl" />
-          <div>
-            <h1 className="text-xl font-bold text-white leading-none group-hover:text-violet-300 transition-colors">NeuronMap</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">Create your knowledge universe</p>
-          </div>
+      <div className="w-full max-w-sm bg-paper-card border border-ink shadow-plate p-8">
+        <Link href="/" className="block mb-8 group">
+          <div className="font-semibold tracking-[0.22em] text-lg group-hover:text-vermilion transition-colors">NEURONMAP</div>
+          <p className="italic text-sm text-ink-faded mt-0.5">Begin your atlas</p>
         </Link>
 
         {step === 'email' && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-zinc-400">Enter your email and we&apos;ll send a {OTP_LENGTH}-digit code</p>
+            <p className="text-sm text-ink-soft">Enter your email and we&apos;ll send a {OTP_LENGTH}-digit code</p>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Email address</label>
+              <label className="block text-sm text-ink-soft mb-1.5">Email address</label>
               <input
                 type="email"
                 value={email}
@@ -97,36 +100,30 @@ export default function RegisterPage() {
                 placeholder="you@example.com"
                 autoFocus
                 onKeyDown={e => e.key === 'Enter' && email && sendOtp()}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                className={inputClass}
               />
             </div>
             {alreadyRegistered && (
-              <div className="text-sm bg-amber-950/40 border border-amber-900 rounded-lg px-3 py-2.5">
-                <p className="text-amber-300">This email is already registered.</p>
-                <p className="text-zinc-400 mt-1">
-                  <Link href="/login" className="text-violet-400 hover:text-violet-300 transition-colors font-medium">
-                    Sign in instead →
+              <div className="text-sm border border-gilt bg-gilt/10 px-3 py-2.5">
+                <p className="text-ink font-medium">This email is already registered.</p>
+                <p className="text-ink-soft mt-1 italic">
+                  <Link href="/login" className="not-italic border-b border-ink-line hover:text-vermilion transition-colors">
+                    Sign in instead
                   </Link>
-                  {'  '}·{'  '}
-                  <Link href="/forgot-password" className="text-zinc-400 hover:text-zinc-200 transition-colors">
+                  {'  ·  '}
+                  <Link href="/forgot-password" className="hover:text-vermilion transition-colors">
                     Forgot password?
                   </Link>
                 </p>
               </div>
             )}
-            {error && (
-              <p className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2">{error}</p>
-            )}
-            <button
-              onClick={sendOtp}
-              disabled={!email || loading}
-              className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
-            >
-              {loading ? 'Sending...' : 'Send code'}
+            {error && <p className={errorClass}>{error}</p>}
+            <button onClick={sendOtp} disabled={!email || loading} className={buttonClass}>
+              {loading ? 'Sending…' : 'Send code'}
             </button>
-            <p className="text-center text-sm text-zinc-500">
+            <p className="text-center text-sm text-ink-faded italic">
               Already have an account?{' '}
-              <Link href="/login" className="text-violet-400 hover:text-violet-300 transition-colors">
+              <Link href="/login" className="text-ink not-italic border-b border-ink-line hover:text-vermilion transition-colors">
                 Sign in
               </Link>
             </p>
@@ -136,13 +133,13 @@ export default function RegisterPage() {
         {step === 'otp' && (
           <div className="flex flex-col gap-4">
             <div>
-              <p className="text-white font-medium mb-1">Enter the code</p>
-              <p className="text-sm text-zinc-400">
-                A {OTP_LENGTH}-digit code was sent to <span className="text-zinc-200">{email}</span>
+              <p className="font-semibold mb-1">Enter the code</p>
+              <p className="text-sm text-ink-soft">
+                A {OTP_LENGTH}-digit code was sent to <span className="font-medium">{email}</span>
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Verification code</label>
+              <label className="block text-sm text-ink-soft mb-1.5">Verification code</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -153,29 +150,23 @@ export default function RegisterPage() {
                 placeholder={'0'.repeat(OTP_LENGTH)}
                 autoFocus
                 onKeyDown={e => e.key === 'Enter' && verifyOtp()}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent tracking-[0.4em] text-center text-base font-mono"
+                className={`${inputClass} tracking-[0.4em] text-center text-base`}
               />
             </div>
-            {error && (
-              <p className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2">{error}</p>
-            )}
-            <button
-              onClick={verifyOtp}
-              disabled={otp.length !== OTP_LENGTH || loading}
-              className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
-            >
-              {loading ? 'Verifying...' : 'Verify'}
+            {error && <p className={errorClass}>{error}</p>}
+            <button onClick={verifyOtp} disabled={otp.length !== OTP_LENGTH || loading} className={buttonClass}>
+              {loading ? 'Verifying…' : 'Verify'}
             </button>
             <button
               onClick={() => { setOtp(''); sendOtp() }}
               disabled={loading}
-              className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors text-center"
+              className="text-sm italic text-ink-faded hover:text-ink transition-colors text-center"
             >
               Didn&apos;t get it? Resend
             </button>
             <button
               onClick={() => { setStep('email'); setOtp(''); setError('') }}
-              className="text-sm text-zinc-600 hover:text-zinc-400 transition-colors text-center"
+              className="text-sm italic text-ink-line hover:text-ink-faded transition-colors text-center"
             >
               ← Change email
             </button>

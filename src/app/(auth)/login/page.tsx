@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
+const inputClass =
+  'w-full bg-paper border border-ink-line px-3 py-2 text-[15px] text-ink placeholder:text-ink-line placeholder:italic focus:outline-none focus:border-vermilion'
+const labelClass = 'block text-sm text-ink-soft mb-1.5'
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,25 +36,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-zinc-950">
+    <div className="relative min-h-screen flex items-center justify-center text-ink">
       <Link
         href="/"
-        className="absolute top-5 right-6 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg px-4 py-2 transition-colors"
+        className="absolute top-5 right-6 text-sm border-[1.5px] border-ink px-4 py-2 shadow-plate-sm hover:bg-paper-card transition-colors"
       >
         ← Back to home
       </Link>
-      <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl">
-        <Link href="/" className="flex items-center gap-3 mb-8 group">
-          <img src="/icon.svg" alt="NeuronMap" className="w-10 h-10 rounded-xl" />
-          <div>
-            <h1 className="text-xl font-bold text-white leading-none group-hover:text-violet-300 transition-colors">NeuronMap</h1>
-            <p className="text-xs text-zinc-500 mt-0.5">Build your knowledge universe</p>
-          </div>
+      <div className="w-full max-w-sm bg-paper-card border border-ink shadow-plate p-8">
+        <Link href="/" className="block mb-8 group">
+          <div className="font-semibold tracking-[0.22em] text-lg group-hover:text-vermilion transition-colors">NEURONMAP</div>
+          <p className="italic text-sm text-ink-faded mt-0.5">Return to your universe</p>
         </Link>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">Email</label>
+            <label className={labelClass}>Email</label>
             <input
               type="email"
               value={email}
@@ -58,14 +59,14 @@ export default function LoginPage() {
               placeholder="you@example.com"
               required
               autoComplete="email"
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm font-medium text-zinc-400">Password</label>
-              <Link href="/forgot-password" className="text-xs text-zinc-500 hover:text-violet-300 transition-colors">
+            <div className="flex items-baseline justify-between mb-1.5">
+              <label className="block text-sm text-ink-soft">Password</label>
+              <Link href="/forgot-password" className="italic text-xs text-ink-faded hover:text-vermilion transition-colors">
                 Forgot password?
               </Link>
             </div>
@@ -76,12 +77,12 @@ export default function LoginPage() {
               placeholder="••••••••"
               required
               autoComplete="current-password"
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+              className={inputClass}
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2">
+            <p className="text-sm text-vermilion border border-vermilion/60 bg-vermilion/5 px-3 py-2">
               {error}
             </p>
           )}
@@ -89,16 +90,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-2.5 text-sm transition-colors"
+            className="w-full mt-1 bg-ink text-paper-card tracking-[0.08em] py-2.5 shadow-plate-sm hover:bg-ink-soft disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-zinc-500">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-violet-400 hover:text-violet-300 transition-colors">
-            Sign up
+        <p className="mt-6 text-center text-sm text-ink-faded italic">
+          No atlas yet?{' '}
+          <Link href="/register" className="text-ink not-italic border-b border-ink-line hover:text-vermilion transition-colors">
+            Begin one
           </Link>
         </p>
       </div>
